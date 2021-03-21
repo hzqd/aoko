@@ -1,26 +1,44 @@
-pub trait KtStd {
-    fn drop(self) where Self: Sized {}
+use std::fmt::Debug;
 
-    fn then<R>(self, f: impl FnOnce(Self) -> R) -> R where Self: Sized {
+pub trait KtStd: Sized {
+    fn drop(self) {}
+
+    fn let_ref<R>(&self, f: impl FnOnce(&Self) -> R) -> R {
         f(self)
     }
 
-    fn also<R>(self, f: impl FnOnce(&Self) -> R) -> Self where Self: Sized {
+    fn let_mut<R>(&mut self, f: impl FnOnce(&mut Self) -> R) -> R {
+        f(self)
+    }
+
+    fn let_owned<R>(self, f: impl FnOnce(Self) -> R) -> R {
+        f(self)
+    }
+
+    fn also_ref<R>(self, f: impl FnOnce(&Self) -> R) -> Self {
         f(&self);
         self
     }
     
-    fn also_mut<R>(mut self, f: impl FnOnce(&mut Self) -> R) -> Self where Self: Sized {
+    fn also_mut<R>(mut self, f: impl FnOnce(&mut Self) -> R) -> Self {
         f(&mut self);
         self
     }
 
-    fn sout(self) -> Self where Self: Sized + std::fmt::Debug {
-        self.also(|s| println!("{:#?}", s))
+    fn sout(self) -> Self where Self: Debug {
+        self.also_ref(|s| println!("{:#?}", s))
     }
 
-    fn echo(self) -> Self where Self: Sized + std::fmt::Debug {
-        self.also(|s| println!("{:?}", s))
+    fn echo(self) -> Self where Self: Debug {
+        self.also_ref(|s| println!("{:?}", s))
+    }
+
+    fn type_name(&self) -> &str {
+        std::any::type_name::<Self>()
+    }
+    
+    fn type_size(&self) -> usize {
+        std::mem::size_of::<Self>()
     }
 }
 
