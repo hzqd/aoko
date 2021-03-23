@@ -3,11 +3,11 @@ use std::fmt::Debug;
 pub trait KtStd: Sized {
     fn drop(self) {}
 
-    fn let_ref<R>(&self, f: impl FnOnce(&Self) -> R) -> R {
+    fn let_ref<'a, R>(&'a self, f: impl FnOnce(&'a Self) -> R) -> R {
         f(self)
     }
 
-    fn let_mut<R>(&mut self, f: impl FnOnce(&mut Self) -> R) -> R {
+    fn let_mut<'a, R>(&'a mut self, f: impl FnOnce(&'a mut Self) -> R) -> R {
         f(self)
     }
 
