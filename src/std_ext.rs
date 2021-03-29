@@ -110,11 +110,11 @@ impl<T> IterExt<T> for Vec<T> where T: Send {
     }
 
     fn partition3(self, predicate1: impl Fn(&T) -> bool + Sync + Send, predicate2: impl Fn(&T) -> bool + Sync + Send) -> (Vec<T>, Vec<T>, Vec<T>) where T: Sync {
-        let ((first, second), third) = self.into_par_iter().partition_map(|e| {
+        let ((first, second), third) = self.into_par_iter().partition_map(|e|
             if predicate1(&e) { Either::Left(Either::Left(e)) }
             else if predicate2(&e) { Either::Left(Either::Right(e)) }
-            else{ Either::Right(e) }
-        });
+            else { Either::Right(e) }
+        );
         (first, second, third)
     }
 }
