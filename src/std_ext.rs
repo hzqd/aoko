@@ -1,4 +1,4 @@
-use std::fmt::Debug;
+use std::{fmt::Debug, ops::Add, iter::Product};
 use rayon::{iter::Either, prelude::*};
 
 pub trait KtStd<R>: Sized {
@@ -79,7 +79,9 @@ pub trait IterExt<T> {
     fn on_each(self, f: impl Fn(&mut T) + Sync + Send) -> Self;
     fn filter(self, f: impl Fn(&T) -> bool + Sync + Send) -> Vec<T>;
     fn fold(self, init: T, f: impl Fn(T, T) -> T + Sync + Send) -> T where T: Sync + Copy;
-    fn reduce(self, f: impl Fn(T, T) -> T + Sync + Send) -> T where T: Default;
+    fn reduce(self, f: impl Fn(T, T) -> T + Sync + Send) -> T where T: Sync + Copy + Default;
+    fn sum(self) -> T where T: Sync + Copy + Default + Add<Output = T>;
+    fn product(self) -> T where T: Product;
     fn partition(self, f: impl Fn(&T) -> bool + Sync + Send) -> (Vec<T>, Vec<T>);
     fn partition3(self, predicate1: impl Fn(&T) -> bool + Sync + Send, predicate2: impl Fn(&T) -> bool + Sync + Send) -> (Vec<T>, Vec<T>, Vec<T>) where T: Sync;
 }
@@ -101,8 +103,16 @@ impl<T> IterExt<T> for Vec<T> where T: Send {
         self.into_par_iter().reduce(|| init, f)
     }
 
-    fn reduce(self, f: impl Fn(T, T) -> T + Sync + Send) -> T where T: Default {
-        self.into_par_iter().reduce(|| T::default(), f)
+    fn reduce(self, f: impl Fn(T, T) -> T + Sync + Send) -> T where T: Sync + Copy + Default {
+        self.fold(T::default(), f)
+    }
+
+    fn sum(self) -> T where T: Sync + Copy + Default + Add<Output = T> {
+        self.reduce(|a, b| a + b)
+    }
+
+    fn product(self) -> T where T: Product {
+        self.into_par_iter().product()
     }
 
     fn partition(self, f: impl Fn(&T) -> bool + Sync + Send) -> (Vec<T>, Vec<T>) {
