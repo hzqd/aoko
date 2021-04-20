@@ -8,3 +8,7 @@ pub fn wait_enter() {
         }
     }
 }
+
+pub fn y<T, R>(f: impl Copy + Fn(&dyn Fn(T) -> R, T) -> R) -> impl Fn(T) -> R {
+    move |a| f(&y(f), a)
+}
