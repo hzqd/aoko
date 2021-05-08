@@ -59,12 +59,22 @@ impl<P1, P2: 'static, R, F> FnOnceExt<P1, P2, R> for F where F: FnOnce(P1, P2) -
     }
 }
 
-pub trait VecExt<T, R> {
+pub trait Sort<T> {
+    fn sort(self) -> Vec<T>;
+}
+
+impl<T: Ord + Send> Sort<T> for Vec<T> {
+    fn sort(self) -> Vec<T> {
+        self.also_mut(|v| v.par_sort())
+    }
+}
+
+pub trait VecExt2<T, R> {
     fn map(&self, f: impl Fn(&T) -> R + Sync + Send) -> Vec<R>;
     fn filter_map(&self, f: impl Fn(&T) -> Option<R> + Sync + Send) -> Vec<R>;
 }
 
-impl<T, R> VecExt<T, R> for Vec<T> where T: Sync, R: Send {
+impl<T, R> VecExt2<T, R> for Vec<T> where T: Sync, R: Send {
     fn map(&self, f: impl Fn(&T) -> R + Sync + Send) -> Vec<R> {
         self.par_iter().map(f).collect()
     }
@@ -74,7 +84,7 @@ impl<T, R> VecExt<T, R> for Vec<T> where T: Sync, R: Send {
     }
 }
 
-pub trait IterExt<T> {
+pub trait VecExt1<T> {
     fn for_each(self, f: impl Fn(T) + Sync + Send);
     fn on_each(self, f: impl Fn(&mut T) + Sync + Send) -> Self;
     fn filter(self, f: impl Fn(&T) -> bool + Sync + Send) -> Vec<T>;
@@ -86,7 +96,7 @@ pub trait IterExt<T> {
     fn partition3<F>(self, predicate1: F, predicate2: F) -> (Vec<T>, Vec<T>, Vec<T>) where T: Sync, F: Fn(&T) -> bool + Sync + Send;
 }
 
-impl<T> IterExt<T> for Vec<T> where T: Send {
+impl<T> VecExt1<T> for Vec<T> where T: Send {
     fn for_each(self, f: impl Fn(T) + Sync + Send) {
         self.into_par_iter().for_each(f);
     }
