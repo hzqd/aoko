@@ -173,6 +173,80 @@ pub trait Ext: Sized {
 
 impl<T> Ext for T {}
 
+/// This trait is to implement some extension functions for `bool` type.
+pub trait BoolExt<R>: Sized {
+    fn if_true(self, f: impl FnOnce() -> R) -> Option<R>;
+    fn if_false(self, f: impl FnOnce() -> R) -> Option<R>;
+}
+
+impl<R> BoolExt<R> for bool {
+    /// Chainable `if`, execute when the condition is `true`
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use aoko::std_ext::*;
+    ///
+    /// let s = "Hello World";
+    /// assert_eq!(Some("lo Wo"), s.starts_with("Hel").if_true(|| &s[3..8]));
+    /// assert_eq!(None, s.starts_with("Wor").if_true(|| &s[3..8]));
+    /// ```
+    fn if_true(self, f: impl FnOnce() -> R) -> Option<R> {
+        if self { Some(f()) } else { None }
+    }
+
+    /// Chainable `if`, execute when the condition is `false`
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use aoko::std_ext::*;
+    ///
+    /// let s = "Hello World";
+    /// assert_eq!(None, s.starts_with("Hel").if_false(|| &s[3..8]));
+    /// assert_eq!(Some("lo Wo"), s.starts_with("Wor").if_false(|| &s[3..8]));
+    /// ```
+    fn if_false(self, f: impl FnOnce() -> R) -> Option<R> {
+        if !self { Some(f()) } else { None }
+    }
+}
+
+/// This trait is to implement some extension functions for `u128` type.
+pub trait U128Ext {
+    fn fmt_size_from(self, unit: char) -> String;
+}
+
+impl U128Ext for u128 {
+    /// Human readable storage unit.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use aoko::std_ext::*;
+    ///
+    /// assert_eq!(String::from("32.0 G"), 33554432.fmt_size_from('K'));
+    /// ```
+    fn fmt_size_from(self, unit: char) -> String {
+        let units = ['B', 'K', 'M', 'G', 'T', 'P', 'E', 'Z'];
+        let mut size = self as f64;
+        let mut counter = 0;
+        
+        while size >= 1024.0 {
+            size /= 1024.0;
+            counter += 1;
+        }
+    
+        for (i, &c) in units.iter().enumerate() { 
+            if c == unit {
+                counter += i;
+                break;
+            }
+        }
+    
+        format!("{:.1} {}", size, units.get(counter).unwrap_or_else(|| panic!("memory unit out of bounds")))
+    }
+}
+
 /// This trait is to implement some extension functions whose type is `FnOnce`.
 pub trait FnOnceExt<P1, P2, R> {
     fn partial2(self, p2: P2) -> Box<dyn FnOnce(P1) -> R>;
