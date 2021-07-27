@@ -174,7 +174,7 @@ pub trait Ext: Sized {
 impl<T> Ext for T {}
 
 /// This trait is to implement some extension functions for `bool` type.
-pub trait BoolExt<R>: Sized {
+pub trait BoolExt<R> {
     fn if_true(self, f: impl FnOnce() -> R) -> Option<R>;
     fn if_false(self, f: impl FnOnce() -> R) -> Option<R>;
 }
