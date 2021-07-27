@@ -169,6 +169,36 @@ pub trait Ext: Sized {
     fn type_size(&self) -> usize {
         std::mem::size_of::<Self>()
     }
+
+    /// Returns `Some(self)` if it satisfies the given predicate function,
+    /// or `None` if it doesn't.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use aoko::std_ext::*;
+    ///
+    /// assert_eq!(Some("Hello"), "Hello".take_if(|s| s.starts_with("Hel")));
+    /// assert_eq!(None, "Hello".take_if(|s| s.starts_with("Wor")))
+    /// ```
+    fn take_if(self, f: impl FnOnce(&Self) -> bool) -> Option<Self> {
+        if f(&self) { Some(self) } else { None }
+    }
+
+    /// Returns `Some(self)` if it doesn't satisfy the given predicate function,
+    /// or `None` if it does.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use aoko::std_ext::*;
+    ///
+    /// assert_eq!(None, "Hello".take_unless(|s| s.starts_with("Hel")));
+    /// assert_eq!(Some("Hello"), "Hello".take_unless(|s| s.starts_with("Wor")))
+    /// ```
+    fn take_unless(self, f: impl FnOnce(&Self) -> bool) -> Option<Self> {
+        if !f(&self) { Some(self) } else { None }
+    }
 }
 
 impl<T> Ext for T {}
