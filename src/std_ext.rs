@@ -205,12 +205,13 @@ impl<T> Ext for T {}
 
 /// This trait is to implement some extension functions for `bool` type.
 pub trait BoolExt<R> {
-    fn if_true(self, f: impl FnOnce() -> R) -> Option<R>;
-    fn if_false(self, f: impl FnOnce() -> R) -> Option<R>;
+    fn if_true(self, value: R) -> Option<R>;
+    fn if_false(self, value: R) -> Option<R>;
+    fn then_false(self, f: impl FnOnce() -> R) -> Option<R>;
 }
 
 impl<R> BoolExt<R> for bool {
-    /// Chainable `if`, execute when the condition is `true`
+    /// Chainable `if`, returns `Some(value)` when the condition is `true`
     ///
     /// # Examples
     ///
@@ -218,14 +219,14 @@ impl<R> BoolExt<R> for bool {
     /// use aoko::std_ext::*;
     ///
     /// let s = "Hello World";
-    /// assert_eq!(Some("lo Wo"), s.starts_with("Hel").if_true(|| &s[3..8]));
-    /// assert_eq!(None, s.starts_with("Wor").if_true(|| &s[3..8]));
+    /// assert_eq!(Some("lo Wo"), s.starts_with("Hel").if_true(&s[3..8]));
+    /// assert_eq!(None, s.starts_with("Wor").if_true(&s[3..8]));
     /// ```
-    fn if_true(self, f: impl FnOnce() -> R) -> Option<R> {
-        if self { Some(f()) } else { None }
+    fn if_true(self, value: R) -> Option<R> {
+        if self { Some(value) } else { None }
     }
 
-    /// Chainable `if`, execute when the condition is `false`
+    /// Chainable `if`, returns `Some(value)` when the condition is `false`
     ///
     /// # Examples
     ///
@@ -233,10 +234,31 @@ impl<R> BoolExt<R> for bool {
     /// use aoko::std_ext::*;
     ///
     /// let s = "Hello World";
-    /// assert_eq!(None, s.starts_with("Hel").if_false(|| &s[3..8]));
-    /// assert_eq!(Some("lo Wo"), s.starts_with("Wor").if_false(|| &s[3..8]));
+    /// assert_eq!(None, s.starts_with("Hel").if_false(&s[3..8]));
+    /// assert_eq!(Some("lo Wo"), s.starts_with("Wor").if_false(&s[3..8]));
     /// ```
-    fn if_false(self, f: impl FnOnce() -> R) -> Option<R> {
+    fn if_false(self, value: R) -> Option<R> {
+        if !self { Some(value) } else { None }
+    }
+
+    /// Returns `Some(f())` if the bool is true, or `None` otherwise
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use aoko::std_ext::*;
+    ///
+    /// let s = "Hello World";
+    ///
+    /// // then:
+    /// assert_eq!(Some("lo Wo"), s.starts_with("Hel").then(|| &s[3..8]));
+    /// assert_eq!(None, s.starts_with("Wor").then(|| &s[3..8]));
+    ///
+    /// // then_false:
+    /// assert_eq!(None, s.starts_with("Hel").then_false(|| &s[3..8]));
+    /// assert_eq!(Some("lo Wo"), s.starts_with("Wor").then_false(|| &s[3..8]));
+    /// ```
+    fn then_false(self, f: impl FnOnce() -> R) -> Option<R> {
         if !self { Some(f()) } else { None }
     }
 }
