@@ -1,5 +1,6 @@
 use std::{fmt::Debug, ops::Add, iter::Product};
 use rayon::{iter::Either, prelude::*};
+use std::time::{Instant, Duration};
 
 /// This trait is to implement some extension functions,
 /// which need a generic return type, for any sized type.
@@ -118,6 +119,17 @@ pub trait KtStd<R>: Sized {
     fn y(self, f: impl Copy + Fn(&dyn Fn(Self) -> R, Self) -> R) -> R {
         use super::std_fun::y;
         y(f)(self)
+    }
+
+    /// Executes the given closure block and returns the duration of elapsed time interval.
+    fn measure_time(self, f: impl FnOnce(Self) -> R) -> Duration {
+        Instant::now().also_ref(|_| f(self)).elapsed()
+    }
+
+    /// Executes the given closure block,
+    /// returns the result of the closure execution and the duration of elapsed time interval.
+    fn measure_time_with_value(self, f: impl FnOnce(Self) -> R) -> (R, Duration) {
+        Instant::now().let_owned(|s| (f(self), s.elapsed()))
     }
 }
 

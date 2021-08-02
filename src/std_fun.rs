@@ -1,5 +1,6 @@
-use std::io::stdin;
 use super::std_ext::KtStd;
+use std::io::stdin;
+use std::time::{Instant, Duration};
 
 /// Reads a line of input from the standard input stream.
 ///
@@ -30,6 +31,17 @@ pub fn read_line() -> Option<String> {
 /// Usually used in command line program as `.exe` file on Windows to prevent it from exiting directly.
 pub fn wait_enter() {
     while read_line() != None {}
+}
+
+/// Executes the given closure block and returns the duration of elapsed time interval.
+pub fn measure_time<R>(f: impl FnOnce() -> R) -> Duration {
+    Instant::now().also_ref(|_| f()).elapsed()
+}
+
+/// Executes the given closure block,
+/// returns the result of the closure execution and the duration of elapsed time interval.
+pub fn measure_time_with_value<R>(f: impl FnOnce() -> R) -> (R, Duration) {
+    Instant::now().let_owned(|s| (f(), s.elapsed()))
 }
 
 /// The Y Combinator
