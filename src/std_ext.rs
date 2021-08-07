@@ -131,6 +131,18 @@ pub trait KtStd<R>: Sized {
     fn measure_time_with_value(self, f: impl FnOnce(Self) -> R) -> (R, Duration) {
         Instant::now().let_owned(|s| (f(self), s.elapsed()))
     }
+
+    /// Executes the given closure block,
+    /// returns the receiver `self` and the duration of elapsed time interval.
+    fn measure_time_with_self(self, f: impl FnOnce(&Self) -> R) -> (Self, Duration) {
+        Instant::now().also_ref(|_| f(&self)).let_owned(|s| (self, s.elapsed()))
+    }
+
+    /// Executes the given closure block,
+    /// returns the receiver `self` and the duration of elapsed time interval.
+    fn measure_time_with_mut_self(mut self, f: impl FnOnce(&mut Self) -> R) -> (Self, Duration) {
+        Instant::now().also_ref(|_| f(&mut self)).let_owned(|s| (self, s.elapsed()))
+    }
 }
 
 impl<T, R> KtStd<R> for T {}
