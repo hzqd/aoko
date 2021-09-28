@@ -1,4 +1,4 @@
-use std::{fmt::Debug, ops::Add, iter::Product};
+use std::{fmt::{Debug, Display}, iter::Product, ops::Add};
 use rayon::{iter::Either, prelude::*};
 use std::time::{Instant, Duration};
 
@@ -160,8 +160,8 @@ pub trait Ext: Sized {
     }
 
     /// Consumes `self`, `println!` as it is, returns `self`.
-    fn echo(self) -> Self where Self: Debug {
-        self.also_ref(|s| println!("{:?}", s))
+    fn echo(self) -> Self where Self: Display {
+        self.also_ref(|s| println!("{}", s))
     }
 
     /// Returns the name of a type as a string slice.
