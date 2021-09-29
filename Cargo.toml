@@ -1,6 +1,6 @@
 [package]
 name = "aoko"
-version = "0.1.14"
+version = "0.2.0"
 authors = ["hzqd <hzqelf@yeah.net>"]
 edition = "2018"
 description = "A Rust extension library."
@@ -10,4 +10,5 @@ license = "MIT OR Apache-2.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+cora = "0.1"
 rayon = "1.5"

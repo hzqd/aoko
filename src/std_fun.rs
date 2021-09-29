@@ -1,4 +1,4 @@
-use super::std_ext::KtStd;
+use cora::ext::AnyExt1;
 use std::io::stdin;
 use std::time::{Instant, Duration};
 
@@ -42,32 +42,4 @@ pub fn measure_time<R>(f: impl FnOnce() -> R) -> Duration {
 /// returns the result of the closure execution and the duration of elapsed time interval.
 pub fn measure_time_with_value<R>(f: impl FnOnce() -> R) -> (R, Duration) {
     Instant::now().let_owned(|s| (f(), s.elapsed()))
-}
-
-/// The Y Combinator
-///
-/// # Examples
-///
-/// ```
-/// use aoko::std_fun::*;
-///
-/// fn fact(n: usize) -> usize {
-///     y(|f, n| match n {
-///         0 | 1 => 1,
-///         n => n * f(n - 1),
-///     })(n)
-/// }
-/// assert_eq!(fact(5), 5 * 4 * 3 * 2 * 1);
-///
-/// fn fibonacci(n: usize) -> usize {
-///     y(|f, n| match n {
-///         0 => 0,
-///         1 => 1,
-///         n => f(n - 1) + f(n - 2),
-///     })(n)
-/// }
-/// assert_eq!(fibonacci(10), 55);
-/// ```
-pub fn y<T, R>(f: impl Copy + Fn(&dyn Fn(T) -> R, T) -> R) -> impl Fn(T) -> R {
-    move |a| f(&y(f), a)
 }

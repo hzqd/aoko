@@ -1,126 +1,11 @@
+use cora::ext::AnyExt1;
 use std::{fmt::{Debug, Display}, iter::Product, ops::Add};
 use rayon::{iter::Either, prelude::*};
 use std::time::{Instant, Duration};
 
 /// This trait is to implement some extension functions,
 /// which need a generic return type, for any sized type.
-pub trait KtStd<R>: Sized {
-    /// Performs operation `f` with `&self`, returns the closure result.
-    ///
-    /// Moves environment variable(s) to closure by default.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use aoko::std_ext::*;
-    ///
-    /// String::from("Hello")
-    ///     .let_ref(|s| format!("String is: {}", s))
-    ///     .echo();
-    /// ```
-    fn let_ref<'a>(&'a self, f: impl FnOnce(&'a Self) -> R) -> R {
-        f(self)
-    }
-
-    /// Performs operation `f` with `&mut self`, returns the closure result.
-    ///
-    /// Moves environment variable(s) to closure by default.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use aoko::std_ext::*;
-    ///
-    /// vec!["a", "b", "c"]
-    ///     .let_mut(|v| { v.push("d"); format!("Vector is: {:?}", v) })
-    ///     .echo();
-    /// ```
-    fn let_mut<'a>(&'a mut self, f: impl FnOnce(&'a mut Self) -> R) -> R {
-        f(self)
-    }
-
-    /// Consumes `self`, performs operation `f` with it, returns the closure result.
-    ///
-    /// Moves environment variable(s) to closure by default.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use aoko::std_ext::*;
-    ///
-    /// vec![9, 5, 3, 6, 1]
-    ///     .let_owned(|v| v.sort()) // parallel sort, return self
-    ///     .echo();
-    /// ```
-    fn let_owned(self, f: impl FnOnce(Self) -> R) -> R {
-        f(self)
-    }
-
-    /// Consumes `self`, performs operation `f` with it, returns the receiver.
-    ///
-    /// Moves environment variable(s) to closure by default.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use aoko::std_ext::*;
-    ///
-    /// vec!["Hello", "Rust"]
-    ///     .also_ref(|v| println!("Vector is: {:?}", v))
-    ///     .for_each(|s| s.echo());
-    /// ```
-    fn also_ref(self, f: impl FnOnce(&Self) -> R) -> Self {
-        f(&self);
-        self
-    }
-    
-    /// Consumes `self`, performs operation `f` on it, returns the updated value.
-    ///
-    /// Moves environment variable(s) to closure by default.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use aoko::std_ext::*;
-    ///
-    /// vec!["Hello", "Kotlin"]
-    ///     .also_mut(|v| v[1] = "Rust")
-    ///     .echo();
-    /// ```
-    fn also_mut(mut self, f: impl FnOnce(&mut Self) -> R) -> Self {
-        f(&mut self);
-        self
-    }
-
-    /// The Y Combinator
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use aoko::std_ext::*;
-    ///
-    /// fn fact(n: usize) -> usize {
-    ///     n.y(|f, n| match n {
-    ///         0 | 1 => 1,
-    ///         n => n * f(n - 1),
-    ///     })
-    /// }
-    /// assert_eq!(fact(5), 5 * 4 * 3 * 2 * 1);
-    ///
-    /// fn fibonacci(n: usize) -> usize {
-    ///     n.y(|f, n| match n {
-    ///         0 => 0,
-    ///         1 => 1,
-    ///         n => f(n - 1) + f(n - 2),
-    ///     })
-    /// }
-    /// assert_eq!(fibonacci(10), 55);
-    /// ```
-    fn y(self, f: impl Copy + Fn(&dyn Fn(Self) -> R, Self) -> R) -> R {
-        use super::std_fun::y;
-        y(f)(self)
-    }
-
+pub trait StdAnyExt1<R>: Sized {
     /// Executes the given closure block and returns the duration of elapsed time interval.
     fn measure_time(self, f: impl FnOnce(Self) -> R) -> Duration {
         Instant::now().also_ref(|_| f(self)).elapsed()
@@ -145,13 +30,10 @@ pub trait KtStd<R>: Sized {
     }
 }
 
-impl<T, R> KtStd<R> for T {}
+impl<T, R> StdAnyExt1<R> for T {}
 
 /// This trait is to implement some extension functions for any sized type.
-pub trait Ext: Sized {
-    /// Chainable `drop`
-    fn drop(self) {}
-
+pub trait StdAnyExt: Sized {
     /// System output -> with `:#?`'s `println!`.
     ///
     /// Consumes `self`, `println!` with `:#?`, returns `self`.
@@ -193,106 +75,16 @@ pub trait Ext: Sized {
     fn type_size(&self) -> usize {
         std::mem::size_of::<Self>()
     }
-
-    /// Returns `Some(self)` if it satisfies the given predicate function,
-    /// or `None` if it doesn't.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use aoko::std_ext::*;
-    ///
-    /// assert_eq!(Some("Hello"), "Hello".take_if(|s| s.starts_with("Hel")));
-    /// assert_eq!(None, "Hello".take_if(|s| s.starts_with("Wor")))
-    /// ```
-    fn take_if(self, f: impl FnOnce(&Self) -> bool) -> Option<Self> {
-        if f(&self) { Some(self) } else { None }
-    }
-
-    /// Returns `Some(self)` if it doesn't satisfy the given predicate function,
-    /// or `None` if it does.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use aoko::std_ext::*;
-    ///
-    /// assert_eq!(None, "Hello".take_unless(|s| s.starts_with("Hel")));
-    /// assert_eq!(Some("Hello"), "Hello".take_unless(|s| s.starts_with("Wor")))
-    /// ```
-    fn take_unless(self, f: impl FnOnce(&Self) -> bool) -> Option<Self> {
-        if !f(&self) { Some(self) } else { None }
-    }
 }
 
-impl<T> Ext for T {}
-
-/// This trait is to implement some extension functions for `bool` type.
-pub trait BoolExt<R> {
-    fn if_true(self, value: R) -> Option<R>;
-    fn if_false(self, value: R) -> Option<R>;
-    fn then_false(self, f: impl FnOnce() -> R) -> Option<R>;
-}
-
-impl<R> BoolExt<R> for bool {
-    /// Chainable `if`, returns `Some(value)` when the condition is `true`
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use aoko::std_ext::*;
-    ///
-    /// let s = "Hello World";
-    /// assert_eq!(Some("lo Wo"), s.starts_with("Hel").if_true(&s[3..8]));
-    /// assert_eq!(None, s.starts_with("Wor").if_true(&s[3..8]));
-    /// ```
-    fn if_true(self, value: R) -> Option<R> {
-        if self { Some(value) } else { None }
-    }
-
-    /// Chainable `if`, returns `Some(value)` when the condition is `false`
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use aoko::std_ext::*;
-    ///
-    /// let s = "Hello World";
-    /// assert_eq!(None, s.starts_with("Hel").if_false(&s[3..8]));
-    /// assert_eq!(Some("lo Wo"), s.starts_with("Wor").if_false(&s[3..8]));
-    /// ```
-    fn if_false(self, value: R) -> Option<R> {
-        if !self { Some(value) } else { None }
-    }
-
-    /// Returns `Some(f())` if the bool is true, or `None` otherwise
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use aoko::std_ext::*;
-    ///
-    /// let s = "Hello World";
-    ///
-    /// // then:
-    /// assert_eq!(Some("lo Wo"), s.starts_with("Hel").then(|| &s[3..8]));
-    /// assert_eq!(None, s.starts_with("Wor").then(|| &s[3..8]));
-    ///
-    /// // then_false:
-    /// assert_eq!(None, s.starts_with("Hel").then_false(|| &s[3..8]));
-    /// assert_eq!(Some("lo Wo"), s.starts_with("Wor").then_false(|| &s[3..8]));
-    /// ```
-    fn then_false(self, f: impl FnOnce() -> R) -> Option<R> {
-        if !self { Some(f()) } else { None }
-    }
-}
+impl<T> StdAnyExt for T {}
 
 /// This trait is to implement some extension functions for `u128` type.
-pub trait U128Ext {
+pub trait StdU128Ext {
     fn fmt_size_from(self, unit: char) -> String;
 }
 
-impl U128Ext for u128 {
+impl StdU128Ext for u128 {
     /// Human readable storage unit.
     ///
     /// # Examples
@@ -324,11 +116,11 @@ impl U128Ext for u128 {
 }
 
 /// This trait is to implement some extension functions whose type is `FnOnce`.
-pub trait FnOnceExt<P1, P2, R> {
+pub trait StdFnOnceExt<P1, P2, R> {
     fn partial2(self, p2: P2) -> Box<dyn FnOnce(P1) -> R>;
 }
 
-impl<P1, P2: 'static, R, F> FnOnceExt<P1, P2, R> for F where F: FnOnce(P1, P2) -> R + 'static {
+impl<P1, P2: 'static, R, F> StdFnOnceExt<P1, P2, R> for F where F: FnOnce(P1, P2) -> R + 'static {
     /// Two parameters, currying from right to left.
     ///
     /// # Examples
@@ -344,11 +136,11 @@ impl<P1, P2: 'static, R, F> FnOnceExt<P1, P2, R> for F where F: FnOnce(P1, P2) -
     }
 }
 
-pub trait Sort<T> {
+pub trait StdSort<T> {
     fn sort(self) -> Vec<T>;
 }
 
-impl<T: Ord + Send> Sort<T> for Vec<T> {
+impl<T: Ord + Send> StdSort<T> for Vec<T> {
     /// Sorts `Vec` in parallel.
     ///
     /// # Examples
@@ -356,7 +148,7 @@ impl<T: Ord + Send> Sort<T> for Vec<T> {
     /// ```
     /// use aoko::std_ext::*;
     ///
-    /// vec![7, 4, 9, 2].sort().echo();
+    /// vec![7, 4, 9, 2].sort().sout();
     /// ```
     fn sort(self) -> Vec<T> {
         self.also_mut(|v| v.par_sort())
@@ -365,12 +157,12 @@ impl<T: Ord + Send> Sort<T> for Vec<T> {
 
 /// This trait is to implement some extension functions for `Vec` type,
 /// which need two generic types and reference.
-pub trait VecExt2<'a, T, R> where T: 'a {
+pub trait StdVecExt2<'a, T, R> where T: 'a {
     fn map(&'a self, f: impl Fn(&'a T) -> R + Sync + Send) -> Vec<R>;
     fn filter_map(&'a self, f: impl Fn(&'a T) -> Option<R> + Sync + Send) -> Vec<R>;
 }
 
-impl<'a, T, R> VecExt2<'a, T, R> for Vec<T> where T: 'a + Sync, R: Send {
+impl<'a, T, R> StdVecExt2<'a, T, R> for Vec<T> where T: 'a + Sync, R: Send {
     /// Returns a `Vec` containing the results of applying the given `f` function 
     /// to each element in the original `Vec`.
     ///
@@ -393,9 +185,9 @@ impl<'a, T, R> VecExt2<'a, T, R> for Vec<T> where T: 'a + Sync, R: Send {
     /// ```
     /// use aoko::std_ext::*;
     ///
-    /// vec!["apple", "1", "banana", "2"]
-    ///     .filter_map(|s| s.parse::<u8>().ok())
-    ///     .let_owned(|v| assert_eq!(v, vec![1, 2]));
+    /// let v = vec!["apple", "1", "banana", "2"]
+    ///     .filter_map(|s| s.parse::<u8>().ok());
+    /// assert_eq!(v, vec![1, 2]);
     /// ```
     fn filter_map(&'a self, f: impl Fn(&'a T) -> Option<R> + Sync + Send) -> Vec<R> {
         self.par_iter().filter_map(f).collect()
@@ -404,7 +196,7 @@ impl<'a, T, R> VecExt2<'a, T, R> for Vec<T> where T: 'a + Sync, R: Send {
 
 /// This trait is to implement some extension functions for `Vec` type,
 /// which need one generic type, and do not need reference.
-pub trait VecExt1<T> {
+pub trait StdVecExt1<T> {
     fn for_each<R>(self, f: impl Fn(T) -> R + Sync + Send);
     fn on_each<R>(self, f: impl Fn(&mut T) -> R + Sync + Send) -> Self;
     fn filter(self, f: impl Fn(&T) -> bool + Sync + Send) -> Vec<T>;
@@ -416,7 +208,7 @@ pub trait VecExt1<T> {
     fn partition3(self, predicate1: impl Fn(&T) -> bool + Sync + Send, predicate2: impl Fn(&T) -> bool + Sync + Send) -> (Vec<T>, Vec<T>, Vec<T>) where T: Sync;
 }
 
-impl<T> VecExt1<T> for Vec<T> where T: Send {
+impl<T> StdVecExt1<T> for Vec<T> where T: Send {
     /// Executes `f` on each item produced by the iterator for `Vec` in parallel.
     ///
     /// # Examples
