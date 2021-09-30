@@ -1,6 +1,5 @@
-use cora::ext::AnyExt1;
-use std::io::stdin;
-use std::time::{Instant, Duration};
+use crate::no_std::ext::AnyExt1;
+use std::{prelude::v1::*, io::stdin, time::{Instant, Duration}};
 
 /// Reads a line of input from the standard input stream.
 ///
@@ -9,7 +8,7 @@ use std::time::{Instant, Duration};
 /// # Examples
 ///
 /// ```no_run
-/// use aoko::std_fun::*;
+/// use aoko::standard::fun::*;
 /// 
 /// // If you ensure the input is not empty, or want to panic if it is empty, use:
 /// read_line().unwrap();

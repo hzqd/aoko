@@ -1,3 +1,9 @@
 #![allow(dead_code)]
-pub mod std_fun;
-pub mod std_ext;
+#![no_std]
+pub mod no_std;
+
+#[cfg(feature = "std")]
+extern crate no_std_compat as std;
+
+#[cfg(feature = "std")]
+pub mod standard;

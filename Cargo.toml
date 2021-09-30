@@ -1,6 +1,6 @@
 [package]
 name = "aoko"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["hzqd <hzqelf@yeah.net>"]
 edition = "2018"
 description = "A Rust extension library."
@@ -9,6 +9,17 @@ license = "MIT OR Apache-2.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[dependencies]
-cora = "0.1"
-rayon = "1.5"
+[features]
+default = ["std"] # Default to using the std
+std = ["no-std-compat/std"]
+parallel = ["rayon"]
+
+# A no_std compatibility layer
+[dependencies.no-std-compat]
+version = "0.4"
+features = ["alloc"]
+
+# A data parallelism library
+[dependencies.rayon]
+version = "1.5"
+optional = true
