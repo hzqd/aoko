@@ -1,3 +1,6 @@
+use core::cell::{Cell, RefCell};
+use alloc::{boxed::Box, format, rc::Rc, string::String, sync::Arc};
+
 /// This trait is to implement some extension functions,
 /// which need a generic return type, for any sized type.
 pub trait AnyExt1<R>: Sized {
@@ -124,6 +127,66 @@ pub trait AnyExt: Sized {
     /// Chainable `drop`
     fn drop(self) {}
 
+    /// Convert `value` to `Some(value)`
+    fn as_some(self) -> Option<Self> {
+        Some(self)
+    }
+
+    /// Convert `value` to `Box::new(value)`
+    fn as_box(self) -> Box<Self> {
+        Box::new(self)
+    }
+
+    /// Convert `value` to `Cell(value)`
+    fn as_cell(self) -> Cell<Self> {
+        Cell::new(self)
+    }
+
+    /// Convert `value` to `RefCell(value)`
+    fn as_ref_cell(self) -> RefCell<Self> {
+        RefCell::new(self)
+    }
+
+    /// Convert `value` to `Rc::new(value)`
+    fn as_rc(self) -> Rc<Self> {
+        Rc::new(self)
+    }
+
+    /// Convert `value` to `Arc::new(value)`
+    fn as_arc(self) -> Arc<Self> {
+        Arc::new(self)
+    }
+
+    /// Returns the name of a type as a string slice.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use aoko::no_std::ext::*;
+    ///
+    /// assert_eq!("".type_name(), "&str");     // auto ref, auto deref.
+    /// assert_eq!((&"").type_name(), "&str");  // auto deref.
+    /// assert_eq!((&&"").type_name(), "&&str");
+    /// ```
+    fn type_name(&self) -> &str {
+        core::any::type_name::<Self>()
+    }
+    
+    /// Returns the size of a type in bytes.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use aoko::no_std::ext::*;
+    ///
+    /// assert_eq!(().type_size(), 0);      // auto ref, auto deref.
+    /// assert_eq!((&()).type_size(), 0);   // auto deref.
+    /// assert_eq!((&&()).type_size(), 8);
+    /// ```
+    fn type_size(&self) -> usize {
+        core::mem::size_of::<Self>()
+    }
+
     /// Returns `Some(self)` if it satisfies the given predicate function,
     /// or `None` if it doesn't.
     ///
@@ -214,5 +277,62 @@ impl<R> BoolExt<R> for bool {
     /// ```
     fn then_false(self, f: impl FnOnce() -> R) -> Option<R> {
         if !self { Some(f()) } else { None }
+    }
+}
+
+/// This trait is to implement some extension functions for `u128` type.
+pub trait U128Ext {
+    fn fmt_size_from(self, unit: char) -> String;
+}
+
+impl U128Ext for u128 {
+    /// Human readable storage unit.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use aoko::no_std::ext::*;
+    ///
+    /// assert_eq!(String::from("32.0 G"), 33554432.fmt_size_from('K'));
+    /// ```
+    fn fmt_size_from(self, unit: char) -> String {
+        let units = ['B', 'K', 'M', 'G', 'T', 'P', 'E', 'Z'];
+        let mut size = self as f64;
+        let mut counter = 0;
+        
+        while size >= 1024.0 {
+            size /= 1024.0;
+            counter += 1;
+        }
+    
+        for (i, &c) in units.iter().enumerate() { 
+            if c == unit {
+                counter += i;
+                break;
+            }
+        }
+    
+        format!("{:.1} {}", size, units.get(counter).unwrap_or_else(|| panic!("memory unit out of bounds")))
+    }
+}
+
+/// This trait is to implement some extension functions whose type is `FnOnce`.
+pub trait FnOnceExt<P1, P2, R> {
+    fn partial2(self, p2: P2) -> Box<dyn FnOnce(P1) -> R>;
+}
+
+impl<P1, P2: 'static, R, F> FnOnceExt<P1, P2, R> for F where F: FnOnce(P1, P2) -> R + 'static {
+    /// Two parameters, currying from right to left.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use aoko::no_std::ext::*;
+    ///
+    /// fn foo(a: u8, b: u8) -> u8 { a - b }
+    /// assert_eq!(foo.partial2(2)(3), 1);
+    /// ```
+    fn partial2(self, p2: P2) -> Box<dyn FnOnce(P1) -> R> {
+        (move |p1| self(p1, p2)).as_box()
     }
 }

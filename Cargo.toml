@@ -1,6 +1,6 @@
 [package]
 name = "aoko"
-version = "0.2.3"
+version = "0.2.4"
 authors = ["hzqd <hzqelf@yeah.net>"]
 edition = "2018"
 description = "A Rust extension library."
