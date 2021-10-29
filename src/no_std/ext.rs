@@ -1,5 +1,5 @@
-use core::cell::{Cell, RefCell};
-use alloc::{boxed::Box, format, rc::Rc, string::String, sync::Arc};
+use core::{cell::{Cell, RefCell}, str::Utf8Error};
+use alloc::{boxed::Box, format, rc::Rc, str, string::String, sync::Arc};
 
 /// This trait is to implement some extension functions,
 /// which need a generic return type, for any sized type.
@@ -132,6 +132,16 @@ pub trait AnyExt: Sized {
         Some(self)
     }
 
+    /// Convert `value` to `Ok(value)`
+    fn as_ok<B>(self) -> Result<Self, B> {
+        Ok(self)
+    }
+
+    /// Convert `value` to `Err(value)`
+    fn as_err<A>(self) -> Result<A, Self> {
+        Err(self)
+    }
+
     /// Convert `value` to `Box::new(value)`
     fn as_box(self) -> Box<Self> {
         Box::new(self)
@@ -258,7 +268,7 @@ impl<R> BoolExt<R> for bool {
         if !self { Some(value) } else { None }
     }
 
-    /// Returns `Some(f())` if the bool is true, or `None` otherwise
+    /// Returns `Some(f())` if the receiver is `false`, or `None` otherwise
     ///
     /// # Examples
     ///
@@ -277,6 +287,26 @@ impl<R> BoolExt<R> for bool {
     /// ```
     fn then_false(self, f: impl FnOnce() -> R) -> Option<R> {
         if !self { Some(f()) } else { None }
+    }
+}
+
+/// This trait is to implement some extension functions for `&[u8]` and `Vec<u8>` type.
+pub trait Utf8Ext<'a> {
+    fn to_str(self) -> Result<&'a str, Utf8Error>;
+}
+
+impl<'a> Utf8Ext<'a> for &'a [u8] {
+    /// Converts a slice of bytes to a string slice.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use aoko::no_std::ext::*;
+    /// 
+    /// assert_eq!("💖", [240, 159, 146, 150].to_str().unwrap());
+    /// ```
+    fn to_str(self) -> Result<&'a str, Utf8Error> {
+        str::from_utf8(self)
     }
 }
 
