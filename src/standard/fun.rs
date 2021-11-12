@@ -55,7 +55,7 @@ pub fn time_conversion(u: &str) -> impl FnOnce(Duration) -> u128 {
     }
 }
 
-/// Takes a `&str` time unit as a parameter,
+/// Takes a `String` time unit as a parameter,
 /// returns conversion function and the unit.
 pub fn time_conversion_with_unit(u: String) -> (impl FnOnce(Duration) -> u128, String) {
     time_conversion(&u).let_owned(|f| (f, u))
