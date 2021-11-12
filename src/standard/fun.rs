@@ -42,3 +42,21 @@ pub fn measure_time<R>(f: impl FnOnce() -> R) -> Duration {
 pub fn measure_time_with_value<R>(f: impl FnOnce() -> R) -> (R, Duration) {
     Instant::now().let_owned(|s| (f(), s.elapsed()))
 }
+
+/// Takes a `&str` time unit as a parameter,
+/// returns conversion function.
+pub fn time_conversion(u: &str) -> impl FnOnce(Duration) -> u128 {
+    match u {
+        "nanos" => |elapsed: Duration| elapsed.as_nanos(),
+        "micros" => |elapsed: Duration| elapsed.as_micros(),
+        "millis" => |elapsed: Duration| elapsed.as_millis(),
+        "secs" => |elapsed: Duration| elapsed.as_secs() as u128,
+        _ => panic!("unsupported unit")
+    }
+}
+
+/// Takes a `&str` time unit as a parameter,
+/// returns conversion function and the unit.
+pub fn time_conversion_with_unit(u: String) -> (impl FnOnce(Duration) -> u128, String) {
+    time_conversion(&u).let_owned(|f| (f, u))
+}
