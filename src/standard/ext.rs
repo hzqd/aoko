@@ -35,8 +35,15 @@ pub trait StdAnyExt: Sized {
     /// System output -> with `:#?`'s `println!`.
     ///
     /// Consumes `self`, `println!` with `:#?`, returns `self`.
-    fn sout(self) -> Self where Self: Debug {
+    fn dbg(self) -> Self where Self: Debug {
         self.also_ref(|s| println!("{:#?}", s))
+    }
+
+    /// System output -> with `:?`'s `println!`.
+    ///
+    /// Consumes `self`, `println!` with `:?`, returns `self`.
+    fn sout(self) -> Self where Self: Debug {
+        self.also_ref(|s| println!("{:?}", s))
     }
 
     /// Consumes `self`, `println!` as it is, returns `self`.
