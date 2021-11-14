@@ -118,6 +118,36 @@ pub trait AnyExt1<R>: Sized {
         // Chainable
         y(f)(self)
     }
+
+    /// Returns `Some(f())` if it satisfies the given predicate function,
+    /// or `None` if it doesn't.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use aoko::no_std::ext::*;
+    ///
+    /// assert_eq!("Hello World".to_string().as_some(), "Hello".then_if(|s| s.starts_with("Hel"), |s| format!("{} World", s)));
+    /// assert_eq!(None, "Hello".then_if(|s| s.starts_with("Wor"), |_| ()));
+    /// ```
+    fn then_if(self, f1: impl FnOnce(&Self) -> bool, f2: impl FnOnce(Self) -> R) -> Option<R> {
+        if f1(&self) { f2(self).as_some() } else { None }
+    }
+
+    /// Returns `Some(f())` if it doesn't satisfy the given predicate function,
+    /// or `None` if it does.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use aoko::no_std::ext::*;
+    ///
+    /// assert_eq!(None, "Hello".then_unless(|s| s.starts_with("Hel"), |_| ()));
+    /// assert_eq!("Hello World".to_string().as_some(), "Hello".then_unless(|s| s.starts_with("Wor"), |s| format!("{} World", s)));
+    /// ```
+    fn then_unless(self, f1: impl FnOnce(&Self) -> bool, f2: impl FnOnce(Self) -> R) -> Option<R> {
+        if !f1(&self) { f2(self).as_some() } else { None }
+    }
 }
 
 impl<T, R> AnyExt1<R> for T {}
@@ -129,7 +159,7 @@ pub trait AnyExt: Sized {
 
     /// Convert `value` to `Some(value)`
     fn as_some(self) -> Option<Self> {
-        Some(self)
+        self.into()
     }
 
     /// Convert `value` to `Ok(value)`
@@ -206,10 +236,10 @@ pub trait AnyExt: Sized {
     /// use aoko::no_std::ext::*;
     ///
     /// assert_eq!(Some("Hello"), "Hello".take_if(|s| s.starts_with("Hel")));
-    /// assert_eq!(None, "Hello".take_if(|s| s.starts_with("Wor")))
+    /// assert_eq!(None, "Hello".take_if(|s| s.starts_with("Wor")));
     /// ```
     fn take_if(self, f: impl FnOnce(&Self) -> bool) -> Option<Self> {
-        if f(&self) { Some(self) } else { None }
+        if f(&self) { self.as_some() } else { None }
     }
 
     /// Returns `Some(self)` if it doesn't satisfy the given predicate function,
@@ -221,10 +251,10 @@ pub trait AnyExt: Sized {
     /// use aoko::no_std::ext::*;
     ///
     /// assert_eq!(None, "Hello".take_unless(|s| s.starts_with("Hel")));
-    /// assert_eq!(Some("Hello"), "Hello".take_unless(|s| s.starts_with("Wor")))
+    /// assert_eq!(Some("Hello"), "Hello".take_unless(|s| s.starts_with("Wor")));
     /// ```
     fn take_unless(self, f: impl FnOnce(&Self) -> bool) -> Option<Self> {
-        if !f(&self) { Some(self) } else { None }
+        if !f(&self) { self.as_some() } else { None }
     }
 }
 
@@ -250,7 +280,7 @@ impl<R> BoolExt<R> for bool {
     /// assert_eq!(None, s.starts_with("Wor").if_true(&s[3..8]));
     /// ```
     fn if_true(self, value: R) -> Option<R> {
-        if self { Some(value) } else { None }
+        if self { value.as_some() } else { None }
     }
 
     /// Chainable `if`, returns `Some(value)` when the condition is `false`
@@ -265,7 +295,7 @@ impl<R> BoolExt<R> for bool {
     /// assert_eq!(Some("lo Wo"), s.starts_with("Wor").if_false(&s[3..8]));
     /// ```
     fn if_false(self, value: R) -> Option<R> {
-        if !self { Some(value) } else { None }
+        if !self { value.as_some() } else { None }
     }
 
     /// Returns `Some(f())` if the receiver is `false`, or `None` otherwise
@@ -286,7 +316,7 @@ impl<R> BoolExt<R> for bool {
     /// assert_eq!(Some("lo Wo"), s.starts_with("Wor").then_false(|| &s[3..8]));
     /// ```
     fn then_false(self, f: impl FnOnce() -> R) -> Option<R> {
-        if !self { Some(f()) } else { None }
+        if !self { f().as_some() } else { None }
     }
 }
 
