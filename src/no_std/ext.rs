@@ -1,4 +1,4 @@
-use core::{cell::{Cell, RefCell}, str::Utf8Error};
+use core::{cell::{Cell, RefCell}, ops::BitXorAssign, str::Utf8Error};
 use alloc::{boxed::Box, format, rc::Rc, str, string::String, sync::Arc};
 
 /// This trait is to implement some extension functions,
@@ -317,6 +317,47 @@ impl<R> BoolExt<R> for bool {
     /// ```
     fn then_false(self, f: impl FnOnce() -> R) -> Option<R> {
         if !self { f().as_some() } else { None }
+    }
+}
+
+/// This trait is to implement some extension functions for `[T]` type.
+pub trait ArrExt {
+    fn swap_xor(&mut self, i: usize, j: usize) -> &mut Self;
+}
+
+impl<T> ArrExt for [T] where T: BitXorAssign<T> + Copy {
+    /// Swaps two elements in a slice.
+    ///
+    /// # Parameters
+    ///
+    /// * i - The index of the first element
+    /// * j - The index of the second element
+    ///
+    /// # Panics
+    ///
+    /// Panics if `i` or `j` are out of bounds.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let mut v = [0, 1, 2, 3, 4];
+    /// v.swap(1, 3);
+    /// assert!(v == [0, 3, 2, 1, 4]);
+    /// ```
+    /// 
+    /// # Principles
+    /// 
+    /// * a = 甲, b = 乙
+    /// 
+    /// * a = a ^ b    =>    a = 甲 ^ 乙, b = 乙
+    /// * b = a ^ b    =>    a = 甲 ^ 乙, b = 甲 ^ (乙 ^ 乙) = 甲 ^ 0 = 甲
+    /// * a = a ^ b    =>    a = 甲 ^ 乙 ^ 甲 = 甲 ^ 甲 ^ 乙 = 0 ^ 乙 = 乙
+    fn swap_xor(&mut self, i: usize, j: usize) -> &mut Self {
+        self.also_mut(|s| if i != j {
+            s[i] ^= s[j];
+            s[j] ^= s[i];
+            s[i] ^= s[j];
+        })
     }
 }
 
