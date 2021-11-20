@@ -1,5 +1,5 @@
 use crate::no_std::ext::AnyExt1;
-use std::{prelude::v1::*, io::stdin, ops::BitXorAssign, time::{Instant, Duration}};
+use std::{prelude::v1::*, io::stdin, time::{Instant, Duration}};
 
 /// Reads a line of input from the standard input stream.
 ///
@@ -30,22 +30,6 @@ pub fn read_line() -> Option<String> {
 /// Usually used in command line program as `.exe` file on Windows to prevent it from exiting directly.
 pub fn wait_enter() {
     while read_line() != None {}
-}
-
-/// Swaps two variables' value.
-/// 
-/// # Examples
-/// ```
-/// use aoko::standard::fun::*;
-/// 
-/// let a = &mut 1024; let b = &mut 2048;
-/// swap_xor(a, b);
-/// assert_eq!((2048, 1024), (*a, *b));
-/// ```
-pub fn swap_xor<T>(a: &mut T, b: &mut T) where T: BitXorAssign<T> + Copy {
-    *a ^= *b;
-    *b ^= *a;
-    *a ^= *b;
 }
 
 /// Executes the given closure block and returns the duration of elapsed time interval.
