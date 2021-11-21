@@ -322,10 +322,10 @@ impl<R> BoolExt<R> for bool {
 
 /// This trait is to implement some extension functions for `[T]` type.
 pub trait ArrExt {
-    fn swap_xor(&mut self, i: usize, j: usize) -> &mut Self;
+    fn swap_xor(self, i: usize, j: usize) -> Self;
 }
 
-impl<T> ArrExt for [T] where T: BitXorAssign<T> + Copy {
+impl<T> ArrExt for &mut [T] where T: BitXorAssign<T> + Copy {
     /// Swaps two elements in a slice.
     ///
     /// # Parameters
@@ -352,7 +352,7 @@ impl<T> ArrExt for [T] where T: BitXorAssign<T> + Copy {
     /// * a = a ^ b    =>    a = 甲 ^ 乙, b = 乙
     /// * b = a ^ b    =>    a = 甲 ^ 乙, b = 甲 ^ (乙 ^ 乙) = 甲 ^ 0 = 甲
     /// * a = a ^ b    =>    a = 甲 ^ 乙 ^ 甲 = 甲 ^ 甲 ^ 乙 = 0 ^ 乙 = 乙
-    fn swap_xor(&mut self, i: usize, j: usize) -> &mut Self {
+    fn swap_xor(self, i: usize, j: usize) -> Self {
         self.also_mut(|s| if i != j {
             s[i] ^= s[j];
             s[j] ^= s[i];
