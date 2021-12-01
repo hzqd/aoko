@@ -1,3 +1,21 @@
+/// Abbr. of `let mut`
+/// 
+/// # Examples
+/// 
+/// ```
+/// use aoko::lm;
+/// 
+/// lm!(foo = 1024);
+/// foo = 2048;
+/// assert_eq!(2048, foo);
+/// ```
+#[macro_export]
+macro_rules! lm {
+    ($a:ident = $b:expr) => {
+        let mut $a = $b;
+    };
+}
+
 /// Swaps two variables' value.
 /// 
 /// # Principles
