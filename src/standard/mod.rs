@@ -1,3 +1,4 @@
+pub mod algebraic;
 pub mod functions;
 
 #[cfg(feature = "paral")]
