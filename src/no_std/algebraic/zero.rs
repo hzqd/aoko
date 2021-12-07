@@ -1,5 +1,6 @@
 use core::fmt;
 
+#[derive(Debug)]
 pub struct ParseUnitError;
 
 impl fmt::Display for ParseUnitError {
