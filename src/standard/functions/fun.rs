@@ -1,8 +1,6 @@
 use crate::no_std::{functions::ext::AnyExt1, algebraic::sum::TimeUnit};
 use std::{prelude::v1::*, io::stdin, time::{Instant, Duration}};
 
-use super::ext::StdAnyExt;
-
 /// Reads a line of input from the standard input stream.
 ///
 /// Returns a `Some` value when content is not empty.
