@@ -8,7 +8,7 @@ use core::ops::BitXorAssign;
 /// 
 /// # Examples
 /// ```
-/// use aoko::no_std::fun::*;
+/// use aoko::no_std::functions::fun::*;
 /// 
 /// // Normal:
 /// let a = &mut 1024; let b = &mut 2048;

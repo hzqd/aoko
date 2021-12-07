@@ -1,5 +1,7 @@
-use crate::no_std::ext::AnyExt1;
+use crate::no_std::{functions::ext::AnyExt1, algebraic::sum::TimeUnit};
 use std::{prelude::v1::*, io::stdin, time::{Instant, Duration}};
+
+use super::ext::StdAnyExt;
 
 /// Reads a line of input from the standard input stream.
 ///
@@ -8,7 +10,7 @@ use std::{prelude::v1::*, io::stdin, time::{Instant, Duration}};
 /// # Examples
 ///
 /// ```no_run
-/// use aoko::standard::fun::*;
+/// use aoko::standard::functions::fun::*;
 /// 
 /// // If you ensure the input is not empty, or want to panic if it is empty, use:
 /// read_line().unwrap();
@@ -43,20 +45,20 @@ pub fn measure_time_with_value<R>(f: impl FnOnce() -> R) -> (R, Duration) {
     Instant::now().let_owned(|s| (f(), s.elapsed()))
 }
 
-/// Takes a `&str` time unit as a parameter,
+/// Takes `TimeUnit` as a parameter,
 /// returns conversion function.
-pub fn time_conversion(u: &str) -> impl FnOnce(Duration) -> u128 {
+pub fn time_conversion(u: &TimeUnit) -> impl FnOnce(Duration) -> u128 {
+    use TimeUnit::*;
     match u {
-        "nanos" => |elapsed: Duration| elapsed.as_nanos(),
-        "micros" => |elapsed: Duration| elapsed.as_micros(),
-        "millis" => |elapsed: Duration| elapsed.as_millis(),
-        "secs" => |elapsed: Duration| elapsed.as_secs() as u128,
-        _ => panic!("unsupported unit")
+        Nanos => |elapsed: Duration| elapsed.as_nanos(),
+        Micros => |elapsed: Duration| elapsed.as_micros(),
+        Millis => |elapsed: Duration| elapsed.as_millis(),
+        Secs => |elapsed: Duration| elapsed.as_secs() as u128,
     }
 }
 
-/// Takes a `String` time unit as a parameter,
+/// Takes `TimeUnit` as a parameter,
 /// returns conversion function and the unit.
-pub fn time_conversion_with_unit(u: String) -> (impl FnOnce(Duration) -> u128, String) {
+pub fn time_conversion_with_unit(u: TimeUnit) -> (impl FnOnce(Duration) -> u128, TimeUnit) {
     time_conversion(&u).let_owned(|f| (f, u))
 }

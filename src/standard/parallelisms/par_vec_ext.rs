@@ -1,4 +1,4 @@
-use crate::no_std::ext::AnyExt1;
+use crate::no_std::functions::ext::AnyExt1;
 use std::{prelude::v1::*, iter::Product, ops::Add};
 use rayon::{iter::Either, prelude::*};
 
@@ -12,7 +12,7 @@ impl<T: Ord + Send> StdSort<T> for Vec<T> {
     /// # Examples
     ///
     /// ```
-    /// use aoko::standard::par::*;
+    /// use aoko::standard::parallelisms::par_vec_ext::*;
     ///
     /// let v = vec![7, 4, 9, 2].sort();
     /// assert_eq!(v, vec![2, 4, 7, 9]);
@@ -36,7 +36,7 @@ impl<'a, T, R> StdVecExt2<'a, T, R> for Vec<T> where T: 'a + Sync, R: Send {
     /// # Examples
     ///
     /// ```
-    /// use aoko::standard::par::*;
+    /// use aoko::standard::parallelisms::par_vec_ext::*;
     ///
     /// assert_eq!(vec![1, 2, 3].map(|i| i + 1), vec![2, 3, 4]);
     /// ```
@@ -50,7 +50,7 @@ impl<'a, T, R> StdVecExt2<'a, T, R> for Vec<T> where T: 'a + Sync, R: Send {
     /// # Examples
     ///
     /// ```
-    /// use aoko::standard::par::*;
+    /// use aoko::standard::parallelisms::par_vec_ext::*;
     ///
     /// let v = vec!["apple", "1", "banana", "2"]
     ///     .filter_map(|s| s.parse::<u8>().ok());
@@ -81,7 +81,7 @@ impl<T> StdVecExt1<T> for Vec<T> where T: Send {
     /// # Examples
     ///
     /// ```
-    /// use aoko::standard::{par::*, ext::*};
+    /// use aoko::standard::{functions::ext::*, parallelisms::par_vec_ext::*};
     ///
     /// vec![String::from("abc"), String::from("xyz")]
     ///     .for_each(|e| e.echo());
@@ -95,7 +95,7 @@ impl<T> StdVecExt1<T> for Vec<T> where T: Send {
     /// # Examples
     ///
     /// ```
-    /// use aoko::standard::{par::*, ext::*};
+    /// use aoko::standard::{functions::ext::*, parallelisms::par_vec_ext::*};
     ///
     /// assert_eq!(vec!["hello", "rust"].on_each(|s| *s.echo()), vec!["hello", "rust"]);
     /// ```
@@ -108,7 +108,7 @@ impl<T> StdVecExt1<T> for Vec<T> where T: Send {
     /// # Examples
     ///
     /// ```
-    /// use aoko::standard::par::*;
+    /// use aoko::standard::parallelisms::par_vec_ext::*;
     ///
     /// assert_eq!(vec![1, 2, 3, 4].filter(|i| i % 2 == 0), vec![2, 4]);
     /// ```
@@ -124,7 +124,7 @@ impl<T> StdVecExt1<T> for Vec<T> where T: Send {
     /// # Examples
     ///
     /// ```
-    /// use aoko::standard::par::*;
+    /// use aoko::standard::parallelisms::par_vec_ext::*;
     ///
     /// assert_eq!(vec![1, 2, 3, 4].fold(0, |acc, i| acc + i), 10);
     /// ```
@@ -140,7 +140,7 @@ impl<T> StdVecExt1<T> for Vec<T> where T: Send {
     /// # Examples
     ///
     /// ```
-    /// use aoko::standard::par::*;
+    /// use aoko::standard::parallelisms::par_vec_ext::*;
     ///
     /// assert_eq!(vec![1, 2, 3, 4].reduce(|acc, i| acc + i), 10);
     /// ```
@@ -154,7 +154,7 @@ impl<T> StdVecExt1<T> for Vec<T> where T: Send {
     /// # Examples
     ///
     /// ```
-    /// use aoko::standard::par::*;
+    /// use aoko::standard::parallelisms::par_vec_ext::*;
     ///
     /// assert_eq!(vec![1, 2, 3, 4].sum(), 10);
     /// ```
@@ -168,7 +168,7 @@ impl<T> StdVecExt1<T> for Vec<T> where T: Send {
     /// # Examples
     ///
     /// ```
-    /// use aoko::standard::par::*;
+    /// use aoko::standard::parallelisms::par_vec_ext::*;
     ///
     /// assert_eq!(vec![1, 2, 3, 4].product(), 24);
     /// ```
@@ -183,7 +183,7 @@ impl<T> StdVecExt1<T> for Vec<T> where T: Send {
     /// # Examples
     ///
     /// ```
-    /// use aoko::standard::par::*;
+    /// use aoko::standard::parallelisms::par_vec_ext::*;
     ///
     /// assert_eq!(vec![1, 2, 3, 4].partition(|i| i % 2 != 0), (vec![1, 3], vec![2, 4]));
     /// ```
@@ -199,7 +199,7 @@ impl<T> StdVecExt1<T> for Vec<T> where T: Send {
     /// # Examples
     ///
     /// ```
-    /// use aoko::standard::par::*;
+    /// use aoko::standard::parallelisms::par_vec_ext::*;
     ///
     /// assert_eq!(vec![1, 2, 3].partition3(|i| i < &2, |i| i == &2), (vec![1], vec![2], vec![3]));
     /// ```

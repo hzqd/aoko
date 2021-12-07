@@ -1,6 +1,6 @@
 [package]
 name = "aoko"
-version = "0.2.8"
+version = "0.2.10"
 authors = ["hzqd <hzqelf@yeah.net>"]
 edition = "2018"
 description = "A Rust extension library."
@@ -12,7 +12,7 @@ license = "MIT OR Apache-2.0"
 [features]
 default = ["std"] # Default to using the std
 std = ["no-std-compat/std"]
-parallel = ["rayon"]
+paral = ["rayon"]
 
 # A no_std compatibility layer
 [dependencies.no-std-compat]

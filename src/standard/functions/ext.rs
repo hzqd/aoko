@@ -1,4 +1,4 @@
-use crate::no_std::ext::AnyExt1;
+use crate::no_std::functions::ext::AnyExt1;
 use std::{prelude::v1::*, fmt::{Debug, Display}, time::{Instant, Duration}};
 
 /// This trait is to implement some extension functions,

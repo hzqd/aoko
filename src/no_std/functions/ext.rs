@@ -11,7 +11,7 @@ pub trait AnyExt1<R>: Sized {
     /// # Examples
     ///
     /// ```
-    /// use aoko::no_std::ext::*;
+    /// use aoko::no_std::functions::ext::*;
     ///
     /// let s = "Hello".let_ref(|s| format!("String is: {}", s));
     /// assert_eq!(s, "String is: Hello");
@@ -27,7 +27,7 @@ pub trait AnyExt1<R>: Sized {
     /// # Examples
     ///
     /// ```
-    /// use aoko::no_std::ext::*;
+    /// use aoko::no_std::functions::ext::*;
     ///
     /// let v = vec!["a", "b", "c"]
     ///     .let_mut(|v| { v.push("d"); format!("Vector is: {:?}", v) });
@@ -44,7 +44,7 @@ pub trait AnyExt1<R>: Sized {
     /// # Examples
     ///
     /// ```
-    /// use aoko::no_std::ext::*;
+    /// use aoko::no_std::functions::ext::*;
     ///
     /// assert_eq!(1, 1.let_owned(|i| i));
     /// ```
@@ -59,7 +59,7 @@ pub trait AnyExt1<R>: Sized {
     /// # Examples
     ///
     /// ```
-    /// use aoko::no_std::ext::*;
+    /// use aoko::no_std::functions::ext::*;
     ///
     /// let s = "abc".also_ref(|s| s.chars().for_each(|c| print!("{}", c)));
     /// assert_eq!(s, "abc");
@@ -76,7 +76,7 @@ pub trait AnyExt1<R>: Sized {
     /// # Examples
     ///
     /// ```
-    /// use aoko::no_std::ext::*;
+    /// use aoko::no_std::functions::ext::*;
     ///
     /// let v = vec!["Hello", "Kotlin"].also_mut(|v| v[1] = "Rust");
     /// assert_eq!(v, vec!["Hello", "Rust"]);
@@ -91,7 +91,7 @@ pub trait AnyExt1<R>: Sized {
     /// # Examples
     ///
     /// ```
-    /// use aoko::no_std::ext::*;
+    /// use aoko::no_std::functions::ext::*;
     ///
     /// fn fact(n: usize) -> usize {
     ///     n.y(|f, n| match n {
@@ -125,7 +125,7 @@ pub trait AnyExt1<R>: Sized {
     /// # Examples
     ///
     /// ```
-    /// use aoko::no_std::ext::*;
+    /// use aoko::no_std::functions::ext::*;
     ///
     /// assert_eq!("Hello World".to_string().as_some(), "Hello".then_if(|s| s.starts_with("Hel"), |s| format!("{} World", s)));
     /// assert_eq!(None, "Hello".then_if(|s| s.starts_with("Wor"), |_| ()));
@@ -140,7 +140,7 @@ pub trait AnyExt1<R>: Sized {
     /// # Examples
     ///
     /// ```
-    /// use aoko::no_std::ext::*;
+    /// use aoko::no_std::functions::ext::*;
     ///
     /// assert_eq!(None, "Hello".then_unless(|s| s.starts_with("Hel"), |_| ()));
     /// assert_eq!("Hello World".to_string().as_some(), "Hello".then_unless(|s| s.starts_with("Wor"), |s| format!("{} World", s)));
@@ -202,7 +202,7 @@ pub trait AnyExt: Sized {
     /// # Examples
     ///
     /// ```
-    /// use aoko::no_std::ext::*;
+    /// use aoko::no_std::functions::ext::*;
     ///
     /// assert_eq!("".type_name(), "&str");     // auto ref, auto deref.
     /// assert_eq!((&"").type_name(), "&str");  // auto deref.
@@ -217,7 +217,7 @@ pub trait AnyExt: Sized {
     /// # Examples
     ///
     /// ```
-    /// use aoko::no_std::ext::*;
+    /// use aoko::no_std::functions::ext::*;
     ///
     /// assert_eq!(().type_size(), 0);      // auto ref, auto deref.
     /// assert_eq!((&()).type_size(), 0);   // auto deref.
@@ -233,7 +233,7 @@ pub trait AnyExt: Sized {
     /// # Examples
     ///
     /// ```
-    /// use aoko::no_std::ext::*;
+    /// use aoko::no_std::functions::ext::*;
     ///
     /// assert_eq!(Some("Hello"), "Hello".take_if(|s| s.starts_with("Hel")));
     /// assert_eq!(None, "Hello".take_if(|s| s.starts_with("Wor")));
@@ -248,7 +248,7 @@ pub trait AnyExt: Sized {
     /// # Examples
     ///
     /// ```
-    /// use aoko::no_std::ext::*;
+    /// use aoko::no_std::functions::ext::*;
     ///
     /// assert_eq!(None, "Hello".take_unless(|s| s.starts_with("Hel")));
     /// assert_eq!(Some("Hello"), "Hello".take_unless(|s| s.starts_with("Wor")));
@@ -273,7 +273,7 @@ impl<R> BoolExt<R> for bool {
     /// # Examples
     ///
     /// ```
-    /// use aoko::no_std::ext::*;
+    /// use aoko::no_std::functions::ext::*;
     ///
     /// let s = "Hello World";
     /// assert_eq!(Some("lo Wo"), s.starts_with("Hel").if_true(&s[3..8]));
@@ -288,7 +288,7 @@ impl<R> BoolExt<R> for bool {
     /// # Examples
     ///
     /// ```
-    /// use aoko::no_std::ext::*;
+    /// use aoko::no_std::functions::ext::*;
     ///
     /// let s = "Hello World";
     /// assert_eq!(None, s.starts_with("Hel").if_false(&s[3..8]));
@@ -303,7 +303,7 @@ impl<R> BoolExt<R> for bool {
     /// # Examples
     ///
     /// ```
-    /// use aoko::no_std::ext::*;
+    /// use aoko::no_std::functions::ext::*;
     ///
     /// let s = "Hello World";
     ///
@@ -372,7 +372,7 @@ impl<'a> Utf8Ext<'a> for &'a [u8] {
     /// # Examples
     /// 
     /// ```
-    /// use aoko::no_std::ext::*;
+    /// use aoko::no_std::functions::ext::*;
     /// 
     /// assert_eq!("💖", [240, 159, 146, 150].to_str().unwrap());
     /// ```
@@ -392,7 +392,7 @@ impl U128Ext for u128 {
     /// # Examples
     ///
     /// ```
-    /// use aoko::no_std::ext::*;
+    /// use aoko::no_std::functions::ext::*;
     ///
     /// assert_eq!(String::from("32.0 G"), 33554432.fmt_size_from('K'));
     /// ```
@@ -428,7 +428,7 @@ impl<P1, P2: 'static, R, F> FnOnceExt<P1, P2, R> for F where F: FnOnce(P1, P2) -
     /// # Examples
     ///
     /// ```
-    /// use aoko::no_std::ext::*;
+    /// use aoko::no_std::functions::ext::*;
     ///
     /// fn foo(a: u8, b: u8) -> u8 { a - b }
     /// assert_eq!(foo.partial2(2)(3), 1);
