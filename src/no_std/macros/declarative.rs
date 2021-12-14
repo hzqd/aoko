@@ -1,3 +1,20 @@
+/// Abbr. of `let`
+/// 
+/// # Examples
+/// 
+/// ```
+/// use aoko::l;
+/// 
+/// l!(foo = 233; bar = 666);
+/// assert_eq!((233, 666), (foo, bar));
+/// ```
+#[macro_export]
+macro_rules! l {
+    ($($a:ident = $b:expr);*) => {
+        $(let $a = $b;)*
+    };
+}
+
 /// Abbr. of `let mut`
 /// 
 /// # Examples
@@ -5,14 +22,14 @@
 /// ```
 /// use aoko::lm;
 /// 
-/// lm!(foo = 1024);
-/// foo = 2048;
-/// assert_eq!(2048, foo);
+/// lm!(foo = 233; bar = 1024);
+/// foo = 666; bar = 2048;
+/// assert_eq!((666, 2048), (foo, bar));
 /// ```
 #[macro_export]
 macro_rules! lm {
-    ($a:ident = $b:expr) => {
-        let mut $a = $b;
+    ($($a:ident = $b:expr);*) => {
+        $(let mut $a = $b;)*
     };
 }
 
@@ -27,14 +44,14 @@ macro_rules! lm {
 /// ```
 /// use aoko::swap;
 /// 
-/// let (foo, bar) = ('a', 'b');
-/// swap!(foo, bar);
-/// assert_eq!(('b', 'a'), (foo, bar));
+/// let (a, b, c, d) = (1, 2, 3, 4);
+/// swap!(a, b; c, d);
+/// assert_eq!((a, b, c, d), (2, 1, 4, 3));
 /// ```
 #[macro_export]
 macro_rules! swap {
-    ($a:ident, $b:ident) => {
-        let ($b, $a) = ($a, $b);
+    ($($a:ident, $b:ident);*) => {
+        $(let ($b, $a) = ($a, $b);)*
     };
 }
 
@@ -49,17 +66,16 @@ macro_rules! swap {
 /// ```
 /// use aoko::swap_mut;
 /// 
-/// let (foo, bar) = ('a', 'b');
-/// swap_mut!(foo, bar);
-/// assert_eq!(('b', 'a'), (foo, bar));
+/// let (a, b, c, d) = (1, 2, 3, 4);
+/// swap_mut!(a, b; c, d);
+/// assert_eq!((a, b, c, d), (2, 1, 4, 3));
 /// 
-/// foo = 'x';
-/// bar = 'y';
-/// assert_eq!(('x', 'y'), (foo, bar));
+/// a = 10; b = 20; c = 30; d = 40;
+/// assert_eq!((a, b, c, d), (10, 20, 30, 40));
 /// ```
 #[macro_export]
 macro_rules! swap_mut {
-    ($a:ident, $b:ident) => {
-        let (mut $b, mut $a) = ($a, $b);
+    ($($a:ident, $b:ident);*) => {
+        $(let (mut $b, mut $a) = ($a, $b);)*
     };
 }
