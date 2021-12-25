@@ -79,3 +79,43 @@ macro_rules! swap_mut {
         $(let (mut $b, mut $a) = ($a, $b);)*
     };
 }
+
+/// Assert multiple expressions.
+///
+/// # Principles
+/// 
+/// Loop `assert!` statements.
+/// 
+/// # Examples
+/// 
+/// ```
+/// use aoko::asserts;
+/// 
+/// asserts!(true; 1 + 1 == 2; "".chars().next().is_none(););
+/// ```
+#[macro_export]
+macro_rules! asserts {
+    ($($a:expr);* $(;)?) => {
+        $(assert!($a);)*
+    };
+}
+
+/// Assert multiple eq expressions.
+///
+/// # Principles
+/// 
+/// Loop `assert_eq!` statements.
+/// 
+/// # Examples
+/// 
+/// ```
+/// use aoko::assert_eqs;
+/// 
+/// assert_eqs!(0, 0; "", ""; 'z', 'z'; true, true;);
+/// ```
+#[macro_export]
+macro_rules! assert_eqs {
+    ($($a:expr, $b:expr);* $(;)?) => {
+        $(assert_eq!($a, $b);)*
+    };
+}
