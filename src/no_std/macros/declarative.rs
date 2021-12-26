@@ -119,3 +119,67 @@ macro_rules! assert_eqs {
         $(assert_eq!($a, $b);)*
     };
 }
+
+/// Assert multiple not eq expressions.
+///
+/// # Principles
+/// 
+/// Loop `assert_ne!` statements.
+/// 
+/// # Examples
+/// 
+/// ```
+/// use aoko::assert_nes;
+/// 
+/// assert_nes!(1, 2; "a", "b"; 'x', 'y'; true, false;);
+/// ```
+#[macro_export]
+macro_rules! assert_nes {
+    ($($a:expr, $b:expr);* $(;)?) => {
+        $(assert_ne!($a, $b);)*
+    };
+}
+
+/// Default struct: allows assigning user-defined values to fields directly.
+/// 
+/// # Principles
+/// 
+/// Text replacement, automatic function generation.
+/// 
+/// # Examples
+/// 
+/// ``` rust
+/// use aoko::{default_struct, assert_eqs};
+/// 
+/// default_struct!(
+///     #[derive(Debug)]
+///     pub struct A<'a> {
+///         foo: u8 = 123,
+///         bar: &'a str = "abc",
+///     }
+/// );
+/// 
+/// assert_eqs!(
+///     123, A::default().foo;
+///     "abc", A::default().bar;
+///     "A { foo: 123, bar: \"abc\" }", format!("{:?}", A::default());
+/// );
+/// ```
+#[macro_export]
+macro_rules! default_struct {
+    ($(#[$attr:meta])* $vis:vis struct $name:ident $(<$($generic:tt),*>)? {
+        $($field_vis:vis $field:ident: $type:ty = $val:expr),* $(,)?
+    }) => {
+        $(#[$attr])*
+        $vis struct $name $(<$($generic),*>)? {
+            $($field_vis $field: $type),*
+        }
+        impl $(<$($generic),*>)? Default for $name $(<$($generic),*>)? {
+            fn default() -> Self {
+                $name {
+                    $($field: $val),*
+                }
+            }
+        }
+    }
+}
