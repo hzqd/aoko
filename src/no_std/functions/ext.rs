@@ -417,6 +417,30 @@ impl U128Ext for u128 {
     }
 }
 
+/// This trait is to implement some extension functions for `Option<T>` type.
+pub trait OptionExt<T> {
+    fn map_none(self, f: impl FnOnce() -> T) -> Self;
+}
+
+impl<T> OptionExt<T> for Option<T> {
+    /// This function is similar to `or_else`,
+    /// but convert closure result to `Some` automatically.
+    /// 
+    /// # Examples
+    /// 
+    /// ``` rust
+    /// use aoko::no_std::functions::ext::*;
+    /// 
+    /// assert_eq!(Some(0), None::<u8>.map_none(|| 0));
+    /// ```
+    fn map_none(self, f: impl FnOnce() -> T) -> Self {
+        match self {
+            Some(_) => self,
+            None => f().as_some()
+        }
+    }
+}
+
 /// This trait is to implement some extension functions whose type is `FnOnce`.
 pub trait FnOnceExt<P1, P2, R> {
     fn partial2(self, p2: P2) -> Box<dyn FnOnce(P1) -> R>;
