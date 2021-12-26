@@ -157,6 +157,7 @@ macro_rules! assert_nes {
 ///         foo: u8 = 123,
 ///         bar: &'a str = "abc",
 ///     }
+///     struct B {}
 /// );
 /// 
 /// assert_eqs!(
@@ -167,9 +168,9 @@ macro_rules! assert_nes {
 /// ```
 #[macro_export]
 macro_rules! default_struct {
-    ($(#[$attr:meta])* $vis:vis struct $name:ident $(<$($generic:tt),*>)? {
+    ($($(#[$attr:meta])* $vis:vis struct $name:ident $(<$($generic:tt),*>)? {
         $($field_vis:vis $field:ident: $type:ty = $val:expr),* $(,)?
-    }) => {
+    })*) => { $(
         $(#[$attr])*
         $vis struct $name $(<$($generic),*>)? {
             $($field_vis $field: $type),*
@@ -180,6 +181,6 @@ macro_rules! default_struct {
                     $($field: $val),*
                 }
             }
-        }
+        } )*
     }
 }
