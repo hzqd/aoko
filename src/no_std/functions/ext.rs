@@ -419,7 +419,7 @@ impl U128Ext for u128 {
 
 /// This trait is to implement some extension functions for `Option<T>` type.
 pub trait OptionExt<T> {
-    fn map_none(self, f: impl FnOnce() -> T) -> Self;
+    fn or_else_some(self, f: impl FnOnce() -> T) -> Self;
 }
 
 impl<T> OptionExt<T> for Option<T> {
@@ -431,9 +431,9 @@ impl<T> OptionExt<T> for Option<T> {
     /// ``` rust
     /// use aoko::no_std::functions::ext::*;
     /// 
-    /// assert_eq!(Some(0), None::<u8>.map_none(|| 0));
+    /// assert_eq!(Some(0), None::<u8>.or_else_some(|| 0));
     /// ```
-    fn map_none(self, f: impl FnOnce() -> T) -> Self {
+    fn or_else_some(self, f: impl FnOnce() -> T) -> Self {
         match self {
             Some(_) => self,
             None => f().as_some()

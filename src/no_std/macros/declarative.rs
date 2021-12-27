@@ -140,7 +140,7 @@ macro_rules! assert_nes {
     };
 }
 
-/// Default struct: allows assigning user-defined values to fields directly.
+/// `Struct::default()`: assigning user-defined values to fields directly.
 /// 
 /// # Principles
 /// 
@@ -149,9 +149,9 @@ macro_rules! assert_nes {
 /// # Examples
 /// 
 /// ``` rust
-/// use aoko::{default_struct, assert_eqs};
+/// use aoko::{struct_default, assert_eqs};
 /// 
-/// default_struct!(
+/// struct_default!(
 ///     #[derive(Debug)]
 ///     pub struct A<'a> {
 ///         foo: u8 = 123,
@@ -167,7 +167,7 @@ macro_rules! assert_nes {
 /// );
 /// ```
 #[macro_export]
-macro_rules! default_struct {
+macro_rules! struct_default {
     ($($(#[$attr:meta])* $vis:vis struct $name:ident $(<$($generic:tt),*>)? {
         $($field_vis:vis $field:ident: $type:ty = $val:expr),* $(,)?
     })*) => { $(
@@ -179,6 +179,57 @@ macro_rules! default_struct {
             fn default() -> Self {
                 $name {
                     $($field: $val),*
+                }
+            }
+        } )*
+    }
+}
+
+/// `Struct::new(...)`: define parameters and assigning user-defined values to fields directly.
+/// 
+/// # Principles
+/// 
+/// Text replacement, automatic function generation.
+/// 
+/// # Examples
+/// 
+/// ``` rust
+/// use aoko::{struct_new, assert_eqs};
+/// 
+/// struct_new!(
+///     #[derive(Debug)]
+///     pub struct A<'a>(foo: u8, pub bar: &'a str,) {
+///         abc: u8 = 255,
+///         xyz: &'a str = "xyz",
+///     }
+///     struct B {}
+/// );
+/// 
+/// let test = A::new(123, "bar");
+/// 
+/// assert_eqs!(
+///     123, test.foo;
+///     255, test.abc;
+///     "bar", test.bar;
+///     "xyz", test.xyz;
+///     format!("{:?}", test), "A { foo: 123, bar: \"bar\", abc: 255, xyz: \"xyz\" }";
+/// );
+/// ```
+#[macro_export]
+macro_rules! struct_new {
+    ($($(#[$attr:meta])* $vis:vis struct $s_name:ident $(<$($generic:tt),*>)? $(($($p_vis:vis $p_name:ident: $p_type:ty),* $(,)?))? {
+        $($field_vis:vis $field:ident: $type:ty = $val:expr),* $(,)?
+    })*) => { $(
+        $(#[$attr])*
+        $vis struct $s_name $(<$($generic),*>)? {
+            $($($p_vis $p_name: $p_type,)*)?
+            $($field_vis $field: $type,)*
+        }
+        impl $(<$($generic),*>)? $s_name $(<$($generic),*>)? {
+            fn new($($($p_name: $p_type),*)?) -> Self {
+                $s_name {
+                    $($($p_name,)*)?
+                    $($field: $val,)*
                 }
             }
         } )*
