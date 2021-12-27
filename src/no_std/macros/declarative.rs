@@ -154,10 +154,11 @@ macro_rules! assert_nes {
 /// struct_default!(
 ///     #[derive(Debug)]
 ///     pub struct A<'a> {
-///         foo: u8 = 123,
+///         pub  foo: u8 = 123,
 ///         bar: &'a str = "abc",
 ///     }
 ///     struct B {}
+///     struct C;
 /// );
 /// 
 /// assert_eqs!(
@@ -168,9 +169,12 @@ macro_rules! assert_nes {
 /// ```
 #[macro_export]
 macro_rules! struct_default {
-    ($($(#[$attr:meta])* $vis:vis struct $name:ident $(<$($generic:tt),*>)? {
+    ($vis:vis struct $s_name:ident;) => {$vis struct $s_name;};
+
+    ($(#[$attr:meta])* $vis:vis struct $name:ident $(<$($generic:tt),*>)? {
         $($field_vis:vis $field:ident: $type:ty = $val:expr),* $(,)?
-    })*) => { $(
+    }
+    $($tail:tt)*) => {
         $(#[$attr])*
         $vis struct $name $(<$($generic),*>)? {
             $($field_vis $field: $type),*
@@ -181,8 +185,13 @@ macro_rules! struct_default {
                     $($field: $val),*
                 }
             }
-        } )*
-    }
+        }
+        struct_default! {
+            $($tail)*
+        }
+    };
+
+    () => {}
 }
 
 /// `Struct::new(...)`: define parameters and assigning user-defined values to fields directly.
@@ -198,11 +207,12 @@ macro_rules! struct_default {
 /// 
 /// struct_new!(
 ///     #[derive(Debug)]
-///     pub struct A<'a>(foo: u8, pub bar: &'a str,) {
-///         abc: u8 = 255,
+///     pub struct A<'a, T>(foo: T, pub bar: &'a str,) where T: Copy {
+///         pub  abc: u8 = 255,
 ///         xyz: &'a str = "xyz",
 ///     }
 ///     struct B {}
+///     struct C;
 /// );
 /// 
 /// let test = A::new(123, "bar");
@@ -217,21 +227,29 @@ macro_rules! struct_default {
 /// ```
 #[macro_export]
 macro_rules! struct_new {
-    ($($(#[$attr:meta])* $vis:vis struct $s_name:ident $(<$($generic:tt),*>)? $(($($p_vis:vis $p_name:ident: $p_type:ty),* $(,)?))? {
+    ($vis:vis struct $s_name:ident;) => {$vis struct $s_name;};
+
+    ($(#[$attr:meta])* $vis:vis struct $s_name:ident $(<$($generic:tt),*>)? $(($($p_vis:vis $p_name:ident: $p_type:ty),* $(,)?))? $(where $($id:tt: $limit:tt),*)? {
         $($field_vis:vis $field:ident: $type:ty = $val:expr),* $(,)?
-    })*) => { $(
+    }
+    $($tail:tt)*) => {
         $(#[$attr])*
-        $vis struct $s_name $(<$($generic),*>)? {
+        $vis struct $s_name $(<$($generic),*>)? $(where $($id: $limit),*)? {
             $($($p_vis $p_name: $p_type,)*)?
-            $($field_vis $field: $type,)*
+            $($field_vis $field: $type),*
         }
-        impl $(<$($generic),*>)? $s_name $(<$($generic),*>)? {
+        impl $(<$($generic),*>)? $s_name $(<$($generic),*>)? $(where $($id: $limit),*)? {
             fn new($($($p_name: $p_type),*)?) -> Self {
                 $s_name {
                     $($($p_name,)*)?
-                    $($field: $val,)*
+                    $($field: $val),*
                 }
             }
-        } )*
-    }
+        }
+        struct_new! {
+            $($tail)*
+        }
+    };
+
+    () => {}
 }
