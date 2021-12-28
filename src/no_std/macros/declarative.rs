@@ -154,17 +154,17 @@ macro_rules! assert_nes {
 /// struct_default!(
 ///     #[derive(Debug)]
 ///     pub struct A<'a> {
-///         pub  foo: u8 = 123,
-///         bar: &'a str = "abc",
+///         foo: u8 = 233,
+///         pub bar: &'a str = "abc",
 ///     }
 ///     struct B {}
 ///     struct C;
 /// );
 /// 
 /// assert_eqs!(
-///     123, A::default().foo;
+///     233, A::default().foo;
 ///     "abc", A::default().bar;
-///     "A { foo: 123, bar: \"abc\" }", format!("{:?}", A::default());
+///     "A { foo: 233, bar: \"abc\" }", format!("{:?}", A::default());
 /// );
 /// ```
 #[macro_export]
@@ -207,22 +207,19 @@ macro_rules! struct_default {
 /// 
 /// struct_new!(
 ///     #[derive(Debug)]
-///     pub struct A<'a, T>(foo: T, pub bar: &'a str,) where T: Copy {
-///         pub  abc: u8 = 255,
-///         xyz: &'a str = "xyz",
+///     pub struct A<'a, T>(pub foo: T,) where T: Copy, T: Ord {
+///         pub bar: &'a str = "bar",
 ///     }
 ///     struct B {}
 ///     struct C;
 /// );
 /// 
-/// let test = A::new(123, "bar");
+/// let test = A::new("foo");
 /// 
 /// assert_eqs!(
-///     123, test.foo;
-///     255, test.abc;
+///     "foo", test.foo;
 ///     "bar", test.bar;
-///     "xyz", test.xyz;
-///     format!("{:?}", test), "A { foo: 123, bar: \"bar\", abc: 255, xyz: \"xyz\" }";
+///     format!("{:?}", test), "A { foo: \"foo\", bar: \"bar\" }";
 /// );
 /// ```
 #[macro_export]
