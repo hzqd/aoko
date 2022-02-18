@@ -1,4 +1,4 @@
-use crate::no_std::{functions::ext::AnyExt1, algebraic::sum::TimeUnit};
+use crate::no_std::{algebraic::sum::TimeUnit, pipeline::{pipe::Pipe, tap::Tap}};
 use std::{prelude::v1::*, io::stdin, time::{Instant, Duration}};
 
 /// Reads a line of input from the standard input stream.
@@ -20,9 +20,9 @@ use std::{prelude::v1::*, io::stdin, time::{Instant, Duration}};
 /// read_line().unwrap_or_default();
 /// ```
 pub fn read_line() -> Option<String> {
-    String::new().also_mut(|s| stdin().read_line(s))
+    String::new().tap_mut(|s| stdin().read_line(s))
         .trim_end().to_string()
-        .let_owned(|s| if s.len() > 0 { Some(s) } else { None })
+        .pipe(|s| if s.len() > 0 { Some(s) } else { None })
 }
 
 /// Breaks loop when command line input is empty. (Press `Enter` to exit.)
@@ -34,13 +34,15 @@ pub fn wait_enter() {
 
 /// Executes the given closure block and returns the duration of elapsed time interval.
 pub fn measure_time<R>(f: impl FnOnce() -> R) -> Duration {
-    Instant::now().also_ref(|_| f()).elapsed()
+    Instant::now().tap(|_| f()).elapsed()
 }
 
 /// Executes the given closure block,
-/// returns the result of the closure execution and the duration of elapsed time interval.
-pub fn measure_time_with_value<R>(f: impl FnOnce() -> R) -> (R, Duration) {
-    Instant::now().let_owned(|s| (f(), s.elapsed()))
+/// returns the duration of elapsed time interval and the result of the closure execution.
+pub fn measure_time_with_value<R>(f: impl FnOnce() -> R) -> (Duration, R) {
+    Instant::now()
+        .pipe(|t| (f(), t.elapsed()))
+        .pipe(|(v, e)| (e, v))
 }
 
 /// Takes `TimeUnit` as a parameter,
@@ -58,5 +60,5 @@ pub fn time_conversion(u: &TimeUnit) -> impl FnOnce(Duration) -> u128 {
 /// Takes `TimeUnit` as a parameter,
 /// returns conversion function and the unit.
 pub fn time_conversion_with_unit(u: TimeUnit) -> (impl FnOnce(Duration) -> u128, TimeUnit) {
-    time_conversion(&u).let_owned(|f| (f, u))
+    time_conversion(&u).pipe(|f| (f, u))
 }

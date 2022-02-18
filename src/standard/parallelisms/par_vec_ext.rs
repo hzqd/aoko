@@ -1,4 +1,4 @@
-use crate::no_std::functions::ext::AnyExt1;
+use crate::no_std::pipeline::tap::Tap;
 use std::{prelude::v1::*, iter::Product, ops::Add};
 use rayon::{iter::Either, prelude::*};
 
@@ -18,7 +18,7 @@ impl<T: Ord + Send> StdSort<T> for Vec<T> {
     /// assert_eq!(v, vec![2, 4, 7, 9]);
     /// ```
     fn sort(self) -> Vec<T> {
-        self.also_mut(|v| v.par_sort())
+        self.tap_mut(|v| v.par_sort())
     }
 }
 
@@ -100,7 +100,7 @@ impl<T> StdVecExt1<T> for Vec<T> where T: Send {
     /// assert_eq!(vec!["hello", "rust"].on_each(|s| *s.echo()), vec!["hello", "rust"]);
     /// ```
     fn on_each<R>(self, f: impl Fn(&mut T) -> R + Sync + Send) -> Self {
-        self.also_mut(|v| v.par_iter_mut().for_each(|e| { f(e); }))
+        self.tap_mut(|v| v.par_iter_mut().for_each(|e| { f(e); }))
     }
 
     /// Returns a `Vec` containing only elements matching the given `f` predicate in parallel.

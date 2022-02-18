@@ -1,91 +1,10 @@
+use crate::no_std::pipeline::tap::Tap;
 use core::{cell::{Cell, RefCell}, ops::BitXorAssign, str::Utf8Error};
 use alloc::{boxed::Box, format, rc::Rc, str, string::String, sync::Arc};
 
 /// This trait is to implement some extension functions,
 /// which need a generic return type, for any sized type.
 pub trait AnyExt1<R>: Sized {
-    /// Performs operation `f` with `&self`, returns the closure result.
-    ///
-    /// Moves environment variable(s) to closure by default.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use aoko::no_std::functions::ext::*;
-    ///
-    /// let s = "Hello".let_ref(|s| format!("String is: {}", s));
-    /// assert_eq!(s, "String is: Hello");
-    /// ```
-    fn let_ref<'a>(&'a self, f: impl FnOnce(&'a Self) -> R) -> R {
-        f(self)
-    }
-
-    /// Performs operation `f` with `&mut self`, returns the closure result.
-    ///
-    /// Moves environment variable(s) to closure by default.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use aoko::no_std::functions::ext::*;
-    ///
-    /// let v = vec!["a", "b", "c"]
-    ///     .let_mut(|v| { v.push("d"); format!("Vector is: {:?}", v) });
-    /// assert_eq!(v, "Vector is: [\"a\", \"b\", \"c\", \"d\"]");
-    /// ```
-    fn let_mut<'a>(&'a mut self, f: impl FnOnce(&'a mut Self) -> R) -> R {
-        f(self)
-    }
-
-    /// Consumes `self`, performs operation `f` with it, returns the closure result.
-    ///
-    /// Moves environment variable(s) to closure by default.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use aoko::no_std::functions::ext::*;
-    ///
-    /// assert_eq!(1, 1.let_owned(|i| i));
-    /// ```
-    fn let_owned(self, f: impl FnOnce(Self) -> R) -> R {
-        f(self)
-    }
-
-    /// Consumes `self`, performs operation `f` with it, returns the receiver.
-    ///
-    /// Moves environment variable(s) to closure by default.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use aoko::no_std::functions::ext::*;
-    ///
-    /// let s = "abc".also_ref(|s| s.chars().for_each(|c| print!("{}", c)));
-    /// assert_eq!(s, "abc");
-    /// ```
-    fn also_ref(self, f: impl FnOnce(&Self) -> R) -> Self {
-        f(&self);
-        self
-    }
-    
-    /// Consumes `self`, performs operation `f` on it, returns the updated value.
-    ///
-    /// Moves environment variable(s) to closure by default.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use aoko::no_std::functions::ext::*;
-    ///
-    /// let v = vec!["Hello", "Kotlin"].also_mut(|v| v[1] = "Rust");
-    /// assert_eq!(v, vec!["Hello", "Rust"]);
-    /// ```
-    fn also_mut(mut self, f: impl FnOnce(&mut Self) -> R) -> Self {
-        f(&mut self);
-        self
-    }
-
     /// The Y Combinator
     ///
     /// # Examples
@@ -127,11 +46,11 @@ pub trait AnyExt1<R>: Sized {
     /// ```
     /// use aoko::no_std::functions::ext::*;
     ///
-    /// assert_eq!("Hello World".to_string().as_some(), "Hello".then_if(|s| s.starts_with("Hel"), |s| format!("{} World", s)));
+    /// assert_eq!("Hello World".to_string().into_some(), "Hello".then_if(|s| s.starts_with("Hel"), |s| format!("{} World", s)));
     /// assert_eq!(None, "Hello".then_if(|s| s.starts_with("Wor"), |_| ()));
     /// ```
     fn then_if(self, f1: impl FnOnce(&Self) -> bool, f2: impl FnOnce(Self) -> R) -> Option<R> {
-        if f1(&self) { f2(self).as_some() } else { None }
+        if f1(&self) { f2(self).into_some() } else { None }
     }
 
     /// Returns `Some(f())` if it doesn't satisfy the given predicate function,
@@ -143,10 +62,10 @@ pub trait AnyExt1<R>: Sized {
     /// use aoko::no_std::functions::ext::*;
     ///
     /// assert_eq!(None, "Hello".then_unless(|s| s.starts_with("Hel"), |_| ()));
-    /// assert_eq!("Hello World".to_string().as_some(), "Hello".then_unless(|s| s.starts_with("Wor"), |s| format!("{} World", s)));
+    /// assert_eq!("Hello World".to_string().into_some(), "Hello".then_unless(|s| s.starts_with("Wor"), |s| format!("{} World", s)));
     /// ```
     fn then_unless(self, f1: impl FnOnce(&Self) -> bool, f2: impl FnOnce(Self) -> R) -> Option<R> {
-        if !f1(&self) { f2(self).as_some() } else { None }
+        if !f1(&self) { f2(self).into_some() } else { None }
     }
 }
 
@@ -158,45 +77,78 @@ pub trait AnyExt: Sized {
     fn drop(self) {}
 
     /// Convert `value` to `Some(value)`
-    fn as_some(self) -> Option<Self> {
+    fn into_some(self) -> Option<Self> {
         self.into()
     }
 
     /// Convert `value` to `Ok(value)`
-    fn as_ok<B>(self) -> Result<Self, B> {
+    fn into_ok<B>(self) -> Result<Self, B> {
         Ok(self)
     }
 
     /// Convert `value` to `Err(value)`
-    fn as_err<A>(self) -> Result<A, Self> {
+    fn into_err<A>(self) -> Result<A, Self> {
         Err(self)
     }
 
     /// Convert `value` to `Box::new(value)`
-    fn as_box(self) -> Box<Self> {
+    fn into_box(self) -> Box<Self> {
         Box::new(self)
     }
 
-    /// Convert `value` to `Cell(value)`
-    fn as_cell(self) -> Cell<Self> {
+    /// Convert `value` to `Cell::new(value)`
+    fn into_cell(self) -> Cell<Self> {
         Cell::new(self)
     }
 
-    /// Convert `value` to `RefCell(value)`
-    fn as_ref_cell(self) -> RefCell<Self> {
+    /// Convert `value` to `RefCell::new(value)`
+    fn into_ref_cell(self) -> RefCell<Self> {
         RefCell::new(self)
     }
 
     /// Convert `value` to `Rc::new(value)`
-    fn as_rc(self) -> Rc<Self> {
+    fn into_rc(self) -> Rc<Self> {
         Rc::new(self)
     }
 
     /// Convert `value` to `Arc::new(value)`
-    fn as_arc(self) -> Arc<Self> {
+    fn into_arc(self) -> Arc<Self> {
         Arc::new(self)
     }
 
+    /// Consumes `self`,
+    /// returns the name of a type as a string slice and the `self`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use aoko::no_std::functions::ext::*;
+    ///
+    /// assert_eq!("".type_name().0, "&str");
+    /// assert_eq!("s".type_name().1, "s");
+    /// assert_eq!((&"").type_name().0, "&&str");
+    /// ```
+    fn type_name(self) -> (&'static str, Self) {
+        (core::any::type_name::<Self>(), self)
+    }
+    
+    /// Consumes `self`,
+    /// returns the size of a type in bytes and the `self`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use aoko::no_std::functions::ext::*;
+    ///
+    /// assert_eq!(().type_size().0, 0);
+    /// assert_eq!(().type_size().1, ());
+    /// assert_eq!((&()).type_size().0, 8);
+    /// assert_eq!([(), ()].type_size().0, 0);
+    /// ```
+    fn type_size(self) -> (usize, Self) {
+        (core::mem::size_of::<Self>(), self)
+    }
+    
     /// Returns the name of a type as a string slice.
     ///
     /// # Examples
@@ -204,12 +156,12 @@ pub trait AnyExt: Sized {
     /// ```
     /// use aoko::no_std::functions::ext::*;
     ///
-    /// assert_eq!("".type_name(), "&str");     // auto ref, auto deref.
-    /// assert_eq!((&"").type_name(), "&str");  // auto deref.
-    /// assert_eq!((&&"").type_name(), "&&str");
+    /// assert_eq!(String::new().type_ref_name(), "&alloc::string::String");     // auto ref, auto deref.
+    /// assert_eq!((&String::new()).type_ref_name(), "&alloc::string::String");  // auto deref.
+    /// assert_eq!((&&String::new()).type_ref_name(), "&&alloc::string::String");
     /// ```
-    fn type_name(&self) -> &str {
-        core::any::type_name::<Self>()
+    fn type_ref_name(&self) -> &str {
+        core::any::type_name::<&Self>()
     }
     
     /// Returns the size of a type in bytes.
@@ -219,11 +171,11 @@ pub trait AnyExt: Sized {
     /// ```
     /// use aoko::no_std::functions::ext::*;
     ///
-    /// assert_eq!(().type_size(), 0);      // auto ref, auto deref.
-    /// assert_eq!((&()).type_size(), 0);   // auto deref.
-    /// assert_eq!((&&()).type_size(), 8);
+    /// assert_eq!(().type_ref_size(), 0);      // auto ref, auto deref.
+    /// assert_eq!((&()).type_ref_size(), 0);   // auto deref.
+    /// assert_eq!((&&()).type_ref_size(), 8);
     /// ```
-    fn type_size(&self) -> usize {
+    fn type_ref_size(&self) -> usize {
         core::mem::size_of::<Self>()
     }
 
@@ -239,7 +191,7 @@ pub trait AnyExt: Sized {
     /// assert_eq!(None, "Hello".take_if(|s| s.starts_with("Wor")));
     /// ```
     fn take_if(self, f: impl FnOnce(&Self) -> bool) -> Option<Self> {
-        if f(&self) { self.as_some() } else { None }
+        if f(&self) { self.into_some() } else { None }
     }
 
     /// Returns `Some(self)` if it doesn't satisfy the given predicate function,
@@ -254,7 +206,7 @@ pub trait AnyExt: Sized {
     /// assert_eq!(Some("Hello"), "Hello".take_unless(|s| s.starts_with("Wor")));
     /// ```
     fn take_unless(self, f: impl FnOnce(&Self) -> bool) -> Option<Self> {
-        if !f(&self) { self.as_some() } else { None }
+        if !f(&self) { self.into_some() } else { None }
     }
 }
 
@@ -280,7 +232,7 @@ impl<R> BoolExt<R> for bool {
     /// assert_eq!(None, s.starts_with("Wor").if_true(&s[3..8]));
     /// ```
     fn if_true(self, value: R) -> Option<R> {
-        if self { value.as_some() } else { None }
+        if self { value.into_some() } else { None }
     }
 
     /// Chainable `if`, returns `Some(value)` when the condition is `false`
@@ -295,7 +247,7 @@ impl<R> BoolExt<R> for bool {
     /// assert_eq!(Some("lo Wo"), s.starts_with("Wor").if_false(&s[3..8]));
     /// ```
     fn if_false(self, value: R) -> Option<R> {
-        if !self { value.as_some() } else { None }
+        if !self { value.into_some() } else { None }
     }
 
     /// Returns `Some(f())` if the receiver is `false`, or `None` otherwise
@@ -316,7 +268,7 @@ impl<R> BoolExt<R> for bool {
     /// assert_eq!(Some("lo Wo"), s.starts_with("Wor").then_false(|| &s[3..8]));
     /// ```
     fn then_false(self, f: impl FnOnce() -> R) -> Option<R> {
-        if !self { f().as_some() } else { None }
+        if !self { f().into_some() } else { None }
     }
 }
 
@@ -353,7 +305,7 @@ impl<T> ArrExt for &mut [T] where T: BitXorAssign<T> + Copy {
     /// * b = a ^ b    =>    a = 甲 ^ 乙, b = 甲 ^ (乙 ^ 乙) = 甲 ^ 0 = 甲
     /// * a = a ^ b    =>    a = 甲 ^ 乙 ^ 甲 = 甲 ^ 甲 ^ 乙 = 0 ^ 乙 = 乙
     fn swap_xor(self, i: usize, j: usize) -> Self {
-        self.also_mut(|s| if i != j {
+        self.tap_mut(|s| if i != j {
             s[i] ^= s[j];
             s[j] ^= s[i];
             s[i] ^= s[j];
@@ -436,7 +388,7 @@ impl<T> OptionExt<T> for Option<T> {
     fn or_else_some(self, f: impl FnOnce() -> T) -> Self {
         match self {
             Some(_) => self,
-            None => f().as_some()
+            None => f().into_some()
         }
     }
 }
@@ -458,6 +410,6 @@ impl<P1, P2: 'static, R, F> FnOnceExt<P1, P2, R> for F where F: FnOnce(P1, P2) -
     /// assert_eq!(foo.partial2(2)(3), 1);
     /// ```
     fn partial2(self, p2: P2) -> Box<dyn FnOnce(P1) -> R> {
-        (move |p1| self(p1, p2)).as_box()
+        (move |p1| self(p1, p2)).into_box()
     }
 }

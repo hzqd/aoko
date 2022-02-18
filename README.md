@@ -1,3 +1,3 @@
 # Aoko library
 ## Purpose
-Create an extension library for the rust standard library.
+Create an extension library for the Rust programming language.

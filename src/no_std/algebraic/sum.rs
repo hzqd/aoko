@@ -15,11 +15,11 @@ impl FromStr for TimeUnit {
     fn from_str(unit: &str) -> Result<TimeUnit, ParseUnitError> {
         use TimeUnit::*;
         match unit {
-            "nanos" => Nanos.as_ok(),
-            "micros" => Micros.as_ok(),
-            "millis" => Millis.as_ok(),
-            "secs" => Secs.as_ok(),
-            _ => ParseUnitError.as_err()
+            "nanos" => Nanos.into_ok(),
+            "micros" => Micros.into_ok(),
+            "millis" => Millis.into_ok(),
+            "secs" => Secs.into_ok(),
+            _ => ParseUnitError.into_err()
         }
     }
 }

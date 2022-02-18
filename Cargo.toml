@@ -1,8 +1,8 @@
 [package]
 name = "aoko"
-version = "0.2.22"
+version = "0.3.0-alpha.1" # Alpha(α) --> Beta(β) --> RC(Release Candidate)
 authors = ["hzqd <hzqelf@yeah.net>"]
-edition = "2018"
+edition = "2021"
 description = "A Rust extension library."
 repository = "https://github.com/hzqd/aoko"
 license = "MIT OR Apache-2.0"
