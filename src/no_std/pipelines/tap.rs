@@ -12,7 +12,7 @@ object that is passed to the effect function, by using the value’s
 implementations. For example, the `Vec` collection has no `fn sort` method: this
 is actually implemented on slices, to which `Vec` dereferences.
 ```rust
-use aoko::no_std::pipeline::tap::*;
+use aoko::no_std::pipelines::tap::*;
 # fn make_vec() -> Vec<i32> { vec![] }
 // taps take ordinary closures, which can use deref coercion
 make_vec().tap_mut(|v| v.sort());
@@ -53,7 +53,7 @@ pub trait Tap<Ret>: Sized {
 	/// value-processing pipeline.
 	///
 	/// ```rust
-	/// use aoko::no_std::pipeline::tap::Tap;
+	/// use aoko::no_std::pipelines::tap::Tap;
 	/// # struct Tmp;
 	/// # impl Tmp { fn process_value(self) -> Self { self } }
 	/// # fn make_value() -> Tmp { Tmp }
@@ -84,7 +84,7 @@ pub trait Tap<Ret>: Sized {
 	/// bindings.
 	///
 	/// ```rust
-	/// use aoko::no_std::pipeline::tap::Tap;
+	/// use aoko::no_std::pipelines::tap::Tap;
 	///
 	/// let sorted = [1i32, 5, 2, 4, 3]
 	///   .tap_mut(|arr| arr.sort());
@@ -345,7 +345,7 @@ pub trait TapOptional<R>: Sized {
 	///
 	/// # Examples
 	/// ```rust
-	/// use aoko::no_std::pipeline::tap::TapOptional;
+	/// use aoko::no_std::pipelines::tap::TapOptional;
 	///
 	/// let (some, none) = (Some(10), None::<i32>);
 	/// assert_eq!(some.tap_some(|x| println!("Some({})", x)), some); // Prints `Some(10)`.
@@ -364,7 +364,7 @@ pub trait TapOptional<R>: Sized {
 	///
 	/// # Examples
 	/// ```rust
-	/// use aoko::no_std::pipeline::tap::TapOptional;
+	/// use aoko::no_std::pipelines::tap::TapOptional;
 	///
 	/// let (some, none) = (Some(10), None::<i32>);
 	/// assert_eq!(some.tap_some_mut(|x| *x += 1), Some(11));
@@ -383,7 +383,7 @@ pub trait TapOptional<R>: Sized {
 	///
 	/// # Examples
 	/// ```rust
-	/// use aoko::no_std::pipeline::tap::TapOptional;
+	/// use aoko::no_std::pipelines::tap::TapOptional;
 	///
 	/// let mut x = 0;
 	///
@@ -485,7 +485,7 @@ pub trait TapFallible<R>: Sized {
 	///
 	/// # Examples
 	/// ```rust
-	/// use aoko::no_std::pipeline::tap::TapFallible;
+	/// use aoko::no_std::pipelines::tap::TapFallible;
 	///
 	/// let (ok, err) = (Ok::<i32, i32>(10), Err::<i32, i32>(10));
 	/// assert_eq!(ok.tap_ok(|x| println!("Ok({})", x)), ok); // Prints `Ok(10)`.
@@ -504,7 +504,7 @@ pub trait TapFallible<R>: Sized {
 	///
 	/// # Examples
 	/// ```rust
-	/// use aoko::no_std::pipeline::tap::TapFallible;
+	/// use aoko::no_std::pipelines::tap::TapFallible;
 	///
 	/// let (ok, err) = (Ok::<i32, i32>(10), Err::<i32, i32>(10));
 	/// assert_eq!(ok.tap_ok_mut(|x| *x += 1), Ok(11));
@@ -524,7 +524,7 @@ pub trait TapFallible<R>: Sized {
 	//
 	/// # Examples
 	/// ```rust
-	/// use aoko::no_std::pipeline::tap::TapFallible;
+	/// use aoko::no_std::pipelines::tap::TapFallible;
 	///
 	/// let (ok, err) = (Ok::<i32, i32>(10), Err::<i32, i32>(10));
 	/// assert_eq!(err.tap_err(|x| println!("Err({})", x)), err); // Prints `Err(10)`.
@@ -542,7 +542,7 @@ pub trait TapFallible<R>: Sized {
 	/// [`Tap::tap_mut`]: trait.Tap.html#method.tap_mut
 	/// # Examples
 	/// ```rust
-	/// use aoko::no_std::pipeline::tap::TapFallible;
+	/// use aoko::no_std::pipelines::tap::TapFallible;
 	///
 	/// let (ok, err) = (Ok::<i32, i32>(10), Err::<i32, i32>(10));
 	/// assert_eq!(err.tap_err_mut(|x| *x += 1), Err(11));

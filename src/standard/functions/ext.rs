@@ -1,4 +1,4 @@
-use crate::no_std::pipeline::{tap::Tap, pipe::Pipe};
+use crate::no_std::pipelines::{tap::Tap, pipe::Pipe};
 use std::{prelude::v1::*, fmt::{Debug, Display}, time::{Instant, Duration}};
 
 /// This trait is to implement some extension functions,

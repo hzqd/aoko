@@ -1,4 +1,4 @@
-use crate::no_std::pipeline::tap::Tap;
+use crate::no_std::pipelines::tap::Tap;
 use core::{cell::{Cell, RefCell}, ops::BitXorAssign, str::Utf8Error};
 use alloc::{boxed::Box, format, rc::Rc, str, string::String, sync::Arc};
 

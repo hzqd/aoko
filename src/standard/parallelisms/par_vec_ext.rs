@@ -1,4 +1,4 @@
-use crate::no_std::pipeline::tap::Tap;
+use crate::no_std::pipelines::tap::Tap;
 use std::{prelude::v1::*, iter::Product, ops::Add};
 use rayon::{iter::Either, prelude::*};
 

@@ -39,7 +39,7 @@ where
 	/// # Examples
 	///
 	/// ```rust
-	/// use aoko::no_std::pipeline::conv::Conv;
+	/// use aoko::no_std::pipelines::conv::Conv;
 	///
 	/// let len = "Saluton, mondo!"
 	///   .conv::<String>()
@@ -67,7 +67,7 @@ where
 	/// # Examples
 	///
 	/// ```rust
-	/// use aoko::no_std::pipeline::conv::TryConv;
+	/// use aoko::no_std::pipelines::conv::TryConv;
 	///
 	/// let len = "Saluton, mondo!"
 	///   .try_conv::<String>()

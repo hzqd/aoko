@@ -25,7 +25,7 @@ This trait provides methods that allow any closure or free function to be placed
 as a suffix-position call, by writing them as
 
 ```rust
-# use aoko::no_std::pipeline::pipe::Pipe;
+# use aoko::no_std::pipelines::pipe::Pipe;
 # let receiver = 5;
 fn not_a_method(x: i32) -> u8 { x as u8 }
 receiver.pipe(not_a_method);
@@ -36,7 +36,7 @@ closure with ordinary function-call syntax. This is after all only a library,
 not a syntax transformation:
 
 ```rust
-use aoko::no_std::pipeline::pipe::Pipe;
+use aoko::no_std::pipelines::pipe::Pipe;
 fn add(x: i32, y: i32) -> i32 { x + y }
 
 let out = 5.pipe(|x| add(x, 10));
@@ -58,7 +58,7 @@ pub trait Pipe {
 	/// # Examples
 	///
 	/// ```rust
-	/// use aoko::no_std::pipeline::pipe::Pipe;
+	/// use aoko::no_std::pipelines::pipe::Pipe;
 	///
 	/// fn triple(x: i32) -> i64 {
 	///   x as i64 * 3
@@ -79,7 +79,7 @@ pub trait Pipe {
 	/// # Examples
 	///
 	/// ```rust
-	/// use aoko::no_std::pipeline::pipe::Pipe;
+	/// use aoko::no_std::pipelines::pipe::Pipe;
 	///
 	/// fn fold(v: &Vec<i32>) -> i32 {
 	///   v.iter().copied().sum()
@@ -99,7 +99,7 @@ pub trait Pipe {
 	/// # Examples
 	///
 	/// ```rust
-	/// use aoko::no_std::pipeline::pipe::Pipe;
+	/// use aoko::no_std::pipelines::pipe::Pipe;
 	///
 	/// let mut vec = vec![false, true];
 	/// let last = vec
@@ -122,7 +122,7 @@ pub trait Pipe {
 	///
 	/// ```rust
 	/// use std::borrow::Cow;
-	/// use aoko::no_std::pipeline::pipe::Pipe;
+	/// use aoko::no_std::pipelines::pipe::Pipe;
 	///
 	/// let len = Cow::<'static, str>::from("hello, world")
 	///   .pipe_borrow(str::len);
@@ -141,7 +141,7 @@ pub trait Pipe {
 	/// function.
 	///
 	/// ```rust
-	/// use aoko::no_std::pipeline::pipe::Pipe;
+	/// use aoko::no_std::pipelines::pipe::Pipe;
 	///
 	/// let mut txt = "hello, world".to_string();
 	/// let ptr = txt
