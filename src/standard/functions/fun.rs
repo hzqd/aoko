@@ -1,4 +1,4 @@
-use crate::no_std::{algebraic::sum::TimeUnit, pipelines::{pipe::Pipe, tap::Tap}};
+use crate::no_std::{algebraic::sum::TimeUnit, pipelines::{pipe::Pipe, tap::Tap}, functions::ext::AnyExt};
 use std::{prelude::v1::*, io::stdin, time::{Instant, Duration}};
 
 /// Reads a line of input from the standard input stream.
@@ -22,7 +22,7 @@ use std::{prelude::v1::*, io::stdin, time::{Instant, Duration}};
 pub fn read_line() -> Option<String> {
     String::new().tap_mut(|s| stdin().read_line(s))
         .trim_end().to_string()
-        .pipe(|s| if s.len() > 0 { Some(s) } else { None })
+        .pipe(|s| if s.len() > 0 { s.into_some() } else { None })
 }
 
 /// Breaks loop when command line input is empty. (Press `Enter` to exit.)
