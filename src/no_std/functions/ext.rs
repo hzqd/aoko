@@ -1,6 +1,7 @@
 use crate::no_std::pipelines::tap::Tap;
 use core::{cell::{Cell, RefCell}, ops::BitXorAssign, str::Utf8Error};
 use alloc::{boxed::Box, format, rc::Rc, str, string::String, sync::Arc};
+use itertools::Itertools;
 
 /// This trait is to implement some extension functions,
 /// which need a generic return type, for any sized type.
@@ -310,6 +311,16 @@ impl<T> ArrExt for &mut [T] where T: BitXorAssign<T> + Copy {
             s[j] ^= s[i];
             s[i] ^= s[j];
         })
+    }
+}
+
+pub trait StrExt {
+    fn split_not_empty_and_join(self, split: &str, join: &str) -> String;
+}
+
+impl StrExt for &str {
+    fn split_not_empty_and_join(self, split: &str, join: &str) -> String {
+        self.split(split).filter(|s| s.chars().next().is_some()).join(join)
     }
 }
 
