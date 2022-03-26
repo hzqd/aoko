@@ -3,7 +3,7 @@ use std::{prelude::v1::*, io::stdin, time::{Instant, Duration}};
 
 /// Reads a line of input from the standard input stream.
 ///
-/// Returns a `Some` value when content is not empty.
+/// Returns `None` when the input is empty or not valid UTF-8.
 ///
 /// # Examples
 ///
@@ -21,11 +21,11 @@ use std::{prelude::v1::*, io::stdin, time::{Instant, Duration}};
 /// ```
 pub fn read_line() -> Option<String> {
     String::new().tap_mut(|s| stdin().read_line(s))
-        .trim_end().to_string()
-        .pipe(|s| if s.len() > 0 { s.into_some() } else { None })
+        .trim_end()
+        .pipe(|s| if s.bytes().next().is_some() { s.to_owned().into_some() } else { None })
 }
 
-/// Breaks loop when command line input is empty. (Press `Enter` to exit.)
+/// Breaks loop when command line input is empty. (Press `Enter` to exit/confirm.)
 ///
 /// Usually used in command line program as `.exe` file on Windows to prevent it from exiting directly.
 pub fn wait_enter() {

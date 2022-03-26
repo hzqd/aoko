@@ -320,7 +320,7 @@ pub trait StrExt {
 
 impl StrExt for &str {
     fn split_not_empty_and_join(self, split: &str, join: &str) -> String {
-        self.split(split).filter(|s| s.chars().next().is_some()).join(join)
+        self.split(split).filter(|s| s.bytes().next().is_some()).join(join)
     }
 }
 

@@ -1,6 +1,6 @@
 [package]
 name = "aoko"
-version = "0.3.0-alpha.3" # Alpha(α) --> Beta(β) --> Delta(test) --> RC(Release Candidate)
+version = "0.3.0-alpha.5" # Alpha(α) --> Beta(β) --> Delta(test) --> RC(Release Candidate)
 authors = ["hzqd <hzqelf@yeah.net>"]
 edition = "2021"
 description = "A Rust extension library."
