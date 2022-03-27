@@ -1,35 +1,20 @@
-use crate::no_std::{algebraic::sum::TimeUnit, pipelines::{pipe::Pipe, tap::Tap}, functions::ext::AnyExt};
+use crate::no_std::{algebraic::sum::TimeUnit, pipelines::{pipe::Pipe, tap::Tap}};
 use std::{prelude::v1::*, io::stdin, time::{Instant, Duration}};
 
 /// Reads a line of input from the standard input stream.
 ///
-/// Returns `None` when the input is empty or not valid UTF-8.
-///
-/// # Examples
-///
-/// ```no_run
-/// use aoko::standard::functions::fun::*;
-/// 
-/// // If you ensure the input is not empty, or want to panic if it is empty, use:
-/// read_line().unwrap();
-///
-/// // If you want to return a default value when the input is empty, use:
-/// read_line().unwrap_or(String::from("default_value"));
-///
-/// // If you just want empty value is "", use:
-/// read_line().unwrap_or_default();
-/// ```
-pub fn read_line() -> Option<String> {
-    String::new().tap_mut(|s| stdin().read_line(s))
-        .trim_end()
-        .pipe(|s| if s.bytes().next().is_some() { s.to_owned().into_some() } else { None })
+/// Panics when the input is not UTF-8.
+pub fn read_line() -> String {
+    String::new()
+        .tap_mut(|s| stdin().read_line(s).unwrap())
+        .trim_end().to_owned()
 }
 
 /// Breaks loop when command line input is empty. (Press `Enter` to exit/confirm.)
 ///
 /// Usually used in command line program as `.exe` file on Windows to prevent it from exiting directly.
 pub fn wait_enter() {
-    while read_line() != None {}
+    while read_line().bytes().next().is_some() {}
 }
 
 /// Executes the given closure block and returns the duration of elapsed time interval.
