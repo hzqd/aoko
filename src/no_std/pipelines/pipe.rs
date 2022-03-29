@@ -70,8 +70,8 @@ pub trait Pipe {
 	/// );
 	/// ```
 	#[inline(always)]
-	fn pipe<R>(self, func: impl FnOnce(Self) -> R) -> R where Self: Sized {
-		func(self)
+	fn pipe<R>(self, f: impl FnOnce(Self) -> R) -> R where Self: Sized {
+		f(self)
 	}
 
 	/// Borrows `self` and passes that borrow into the pipe function.
@@ -90,8 +90,8 @@ pub trait Pipe {
 	/// assert_eq!(vec.len(), 5);
 	/// ```
 	#[inline(always)]
-	fn pipe_ref<'a, R>(&'a self, func: impl FnOnce(&'a Self) -> R) -> R {
-		func(self)
+	fn pipe_ref<'a, R>(&'a self, f: impl FnOnce(&'a Self) -> R) -> R {
+		f(self)
 	}
 
 	/// Mutably borrows `self` and passes that borrow into the pipe function.
@@ -112,8 +112,8 @@ pub trait Pipe {
 	/// not be piped. Writing out non-trivial examples for these is a lot of
 	/// boilerplate.
 	#[inline(always)]
-	fn pipe_mut<'a, R>(&'a mut self, func: impl FnOnce(&'a mut Self) -> R) -> R {
-		func(self)
+	fn pipe_mut<'a, R>(&'a mut self, f: impl FnOnce(&'a mut Self) -> R) -> R {
+		f(self)
 	}
 
 	/// Borrows `self`, then passes `self.borrow()` into the pipe function.
@@ -129,12 +129,12 @@ pub trait Pipe {
 	/// assert_eq!(len, 12);
 	/// ```
 	#[inline(always)]
-	fn pipe_borrow<'a, B, R>(&'a self, func: impl FnOnce(&'a B) -> R) -> R
+	fn pipe_borrow<'a, B, R>(&'a self, f: impl FnOnce(&'a B) -> R) -> R
 	where
 		Self: Borrow<B>,
 		B: 'a + ?Sized,
 	{
-		func(Borrow::<B>::borrow(self))
+		f(Borrow::<B>::borrow(self))
 	}
 
 	/// Mutably borrows `self`, then passes `self.borrow_mut()` into the pipe
@@ -152,54 +152,54 @@ pub trait Pipe {
 	/// no implementors in the standard library, and of the implementations
 	/// available, there are almost no methods that fit this API.
 	#[inline(always)]
-	fn pipe_borrow_mut<'a, B, R>(&'a mut self, func: impl FnOnce(&'a mut B) -> R) -> R
+	fn pipe_borrow_mut<'a, B, R>(&'a mut self, f: impl FnOnce(&'a mut B) -> R) -> R
 	where
 		Self: BorrowMut<B>,
 		B: 'a + ?Sized,
 	{
-		func(BorrowMut::<B>::borrow_mut(self))
+		f(BorrowMut::<B>::borrow_mut(self))
 	}
 
 	/// Borrows `self`, then passes `self.as_ref()` into the pipe function.
 	#[inline(always)]
-	fn pipe_as_ref<'a, U, R>(&'a self, func: impl FnOnce(&'a U) -> R) -> R
+	fn pipe_as_ref<'a, U, R>(&'a self, f: impl FnOnce(&'a U) -> R) -> R
 	where
 		Self: AsRef<U>,
 		U: 'a + ?Sized,
 	{
-		func(AsRef::<U>::as_ref(self))
+		f(AsRef::<U>::as_ref(self))
 	}
 
 	/// Mutably borrows `self`, then passes `self.as_mut()` into the pipe
 	/// function.
 	#[inline(always)]
-	fn pipe_as_mut<'a, U, R>(&'a mut self, func: impl FnOnce(&'a mut U) -> R) -> R
+	fn pipe_as_mut<'a, U, R>(&'a mut self, f: impl FnOnce(&'a mut U) -> R) -> R
 	where
 		Self: AsMut<U>,
 		U: 'a + ?Sized,
 	{
-		func(AsMut::<U>::as_mut(self))
+		f(AsMut::<U>::as_mut(self))
 	}
 
 	/// Borrows `self`, then passes `self.deref()` into the pipe function.
 	#[inline(always)]
-	fn pipe_deref<'a, T, R>(&'a self, func: impl FnOnce(&'a T) -> R) -> R
+	fn pipe_deref<'a, T, R>(&'a self, f: impl FnOnce(&'a T) -> R) -> R
 	where
 		Self: Deref<Target = T>,
 		T: 'a + ?Sized,
 	{
-		func(Deref::deref(self))
+		f(Deref::deref(self))
 	}
 
 	/// Mutably borrows `self`, then passes `self.deref_mut()` into the pipe
 	/// function.
 	#[inline(always)]
-	fn pipe_deref_mut<'a, T, R>(&'a mut self, func: impl FnOnce(&'a mut T) -> R) -> R
+	fn pipe_deref_mut<'a, T, R>(&'a mut self, f: impl FnOnce(&'a mut T) -> R) -> R
 	where
 		Self: DerefMut + Deref<Target = T>,
 		T: 'a + ?Sized,
 	{
-		func(DerefMut::deref_mut(self))
+		f(DerefMut::deref_mut(self))
 	}
 }
 
