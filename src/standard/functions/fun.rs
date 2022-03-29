@@ -3,10 +3,12 @@ use std::{prelude::v1::*, io::stdin, time::{Instant, Duration}};
 
 /// Reads a line of input from the standard input stream.
 ///
+/// # Panics
+/// 
 /// Panics when the input is not UTF-8.
 pub fn read_line() -> String {
     String::new()
-        .tap_mut(|s| stdin().read_line(s).unwrap())
+        .tap_mut(|s| stdin().read_line(s).expect("Invalid UTF-8"))
         .trim_end().to_owned()
 }
 
