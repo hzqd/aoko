@@ -1,6 +1,6 @@
 [package]
 name = "aoko"
-version = "0.3.0-alpha.6" # Alpha(α) --> Beta(β) --> Delta(test) --> RC(Release Candidate)
+version = "0.3.0-alpha.7" # Alpha(α) --> Beta(β) --> Delta(δ) --> Eta(η) --> Inda(India) --> Lima --> Oca(Oscar) --> Papa -> QBa(丘比) --> Roma -> Sierra --> Tanga(Tango) --> Vodka(Gin) --> Zala(Zulu)
 authors = ["hzqd <hzqelf@yeah.net>"]
 edition = "2021"
 description = "A Rust extension library."
@@ -10,14 +10,19 @@ license = "MIT OR Apache-2.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-default = ["std"] # Default to using the std
-std = ["no-std-compat/std"]
+default = ["std"] # Default to using the features
+std = ["no-std-compat/std", "minstant"]
 paral = ["rayon"]
 
 # A no_std compatibility layer
 [dependencies.no-std-compat]
 version = "0.4"
 features = ["alloc"]
+
+# A timing library
+[dependencies.minstant]
+version = "0.1"
+optional = true
 
 # A iter extension
 [dependencies.itertools]

@@ -1,5 +1,6 @@
 use crate::no_std::{algebraic::sum::TimeUnit, pipelines::{pipe::Pipe, tap::Tap}};
-use std::{prelude::v1::*, io::stdin, time::{Instant, Duration}};
+use std::{prelude::v1::*, io::stdin, time::Duration};
+use minstant::Instant;
 
 /// Reads a line of input from the standard input stream.
 ///

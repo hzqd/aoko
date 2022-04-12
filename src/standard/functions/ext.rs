@@ -1,5 +1,6 @@
 use crate::no_std::pipelines::{tap::Tap, pipe::Pipe};
-use std::{prelude::v1::*, fmt::{Debug, Display}, time::{Instant, Duration}};
+use std::{prelude::v1::*, fmt::{Debug, Display}, time::Duration};
+use minstant::Instant;
 
 /// This trait is to implement some extension functions,
 /// which need a generic return type, for any sized type.
