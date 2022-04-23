@@ -117,9 +117,9 @@ pub trait Tap<Ret>: Sized {
 	/// [`Tap::tap`]: trait.Tap.html#method.tap
 	#[inline(always)]
 	fn tap_borrow<B>(self, f: impl FnOnce(&B) -> Ret) -> Self
-		where
-			Self: Borrow<B>,
-			B: ?Sized,
+	where
+		Self: Borrow<B>,
+		B: ?Sized,
 	{
 		f(Borrow::<B>::borrow(&self));
 		self
@@ -134,9 +134,9 @@ pub trait Tap<Ret>: Sized {
 	/// [`Tap::tap_mut`]: trait.Tap.html#method.tap_mut
 	#[inline(always)]
 	fn tap_borrow_mut<B>(mut self, f: impl FnOnce(&mut B) -> Ret) -> Self
-		where
-			Self: BorrowMut<B>,
-			B: ?Sized,
+	where
+		Self: BorrowMut<B>,
+		B: ?Sized,
 	{
 		f(BorrowMut::<B>::borrow_mut(&mut self));
 		self
@@ -151,9 +151,9 @@ pub trait Tap<Ret>: Sized {
 	/// [`Tap::tap`]: trait.Tap.html#method.tap
 	#[inline(always)]
 	fn tap_as_ref<R>(self, f: impl FnOnce(&R) -> Ret) -> Self
-		where
-			Self: AsRef<R>,
-			R: ?Sized,
+	where
+		Self: AsRef<R>,
+		R: ?Sized,
 	{
 		f(AsRef::<R>::as_ref(&self));
 		self
@@ -168,9 +168,9 @@ pub trait Tap<Ret>: Sized {
 	/// [`Tap::tap_mut`]: trait.Tap.html#method.tap_mut
 	#[inline(always)]
 	fn tap_as_mut<R>(mut self, f: impl FnOnce(&mut R) -> Ret) -> Self
-		where
-			Self: AsMut<R>,
-			R: ?Sized,
+	where
+		Self: AsMut<R>,
+		R: ?Sized,
 	{
 		f(AsMut::<R>::as_mut(&mut self));
 		self
@@ -185,9 +185,9 @@ pub trait Tap<Ret>: Sized {
 	/// [`Tap::tap`]: trait.Tap.html#method.tap
 	#[inline(always)]
 	fn tap_deref<T>(self, f: impl FnOnce(&T) -> Ret) -> Self
-		where
-			Self: Deref<Target = T>,
-			T: ?Sized,
+	where
+		Self: Deref<Target = T>,
+		T: ?Sized,
 	{
 		f(Deref::deref(&self));
 		self
@@ -202,9 +202,9 @@ pub trait Tap<Ret>: Sized {
 	/// [`Tap::tap_mut`]: trait.Tap.html#method.tap_mut
 	#[inline(always)]
 	fn tap_deref_mut<T>(mut self, f: impl FnOnce(&mut T) -> Ret) -> Self
-		where
-			Self: DerefMut + Deref<Target = T>,
-			T: ?Sized,
+	where
+		Self: DerefMut + Deref<Target = T>,
+		T: ?Sized,
 	{
 		f(DerefMut::deref_mut(&mut self));
 		self
@@ -235,9 +235,9 @@ pub trait Tap<Ret>: Sized {
 	/// builds.
 	#[inline(always)]
 	fn tap_borrow_dbg<B>(self, f: impl FnOnce(&B) -> Ret) -> Self
-		where
-			Self: Borrow<B>,
-			B: ?Sized,
+	where
+		Self: Borrow<B>,
+		B: ?Sized,
 	{
 		if cfg!(debug_assertions) {
 			f(Borrow::<B>::borrow(&self));
@@ -249,9 +249,9 @@ pub trait Tap<Ret>: Sized {
 	/// builds.
 	#[inline(always)]
 	fn tap_borrow_mut_dbg<B>(mut self, f: impl FnOnce(&mut B) -> Ret) -> Self
-		where
-			Self: BorrowMut<B>,
-			B: ?Sized,
+	where
+		Self: BorrowMut<B>,
+		B: ?Sized,
 	{
 		if cfg!(debug_assertions) {
 			f(BorrowMut::<B>::borrow_mut(&mut self));
@@ -263,9 +263,9 @@ pub trait Tap<Ret>: Sized {
 	/// builds.
 	#[inline(always)]
 	fn tap_as_ref_dbg<R>(self, f: impl FnOnce(&R) -> Ret) -> Self
-		where
-			Self: AsRef<R>,
-			R: ?Sized,
+	where
+		Self: AsRef<R>,
+		R: ?Sized,
 	{
 		if cfg!(debug_assertions) {
 			f(AsRef::<R>::as_ref(&self));
@@ -277,9 +277,9 @@ pub trait Tap<Ret>: Sized {
 	/// builds.
 	#[inline(always)]
 	fn tap_as_mut_dbg<R>(mut self, f: impl FnOnce(&mut R) -> Ret) -> Self
-		where
-			Self: AsMut<R>,
-			R: ?Sized,
+	where
+		Self: AsMut<R>,
+		R: ?Sized,
 	{
 		if cfg!(debug_assertions) {
 			f(AsMut::<R>::as_mut(&mut self));
@@ -291,9 +291,9 @@ pub trait Tap<Ret>: Sized {
 	/// builds.
 	#[inline(always)]
 	fn tap_deref_dbg<T>(self, f: impl FnOnce(&T) -> Ret) -> Self
-		where
-			Self: Deref<Target = T>,
-			T: ?Sized,
+	where
+		Self: Deref<Target = T>,
+		T: ?Sized,
 	{
 		if cfg!(debug_assertions) {
 			f(Deref::deref(&self));
@@ -305,9 +305,9 @@ pub trait Tap<Ret>: Sized {
 	/// builds.
 	#[inline(always)]
 	fn tap_deref_mut_dbg<T>(mut self, f: impl FnOnce(&mut T) -> Ret) -> Self
-		where
-			Self: DerefMut + Deref<Target = T>,
-			T: ?Sized,
+	where
+		Self: DerefMut + Deref<Target = T>,
+		T: ?Sized,
 	{
 		if cfg!(debug_assertions) {
 			f(DerefMut::deref_mut(&mut self));

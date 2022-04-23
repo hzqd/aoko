@@ -3,21 +3,22 @@ use std::{prelude::v1::*, iter::Product, ops::Add};
 use rayon::{iter::Either, prelude::*};
 
 pub trait StdSort<T> {
-    fn sort(self) -> Vec<T>;
+    fn parsort(self) -> Self;
 }
 
-impl<T: Ord + Send> StdSort<T> for Vec<T> {
+impl<T: Ord + Send, P: ParallelSliceMut<T>, X: Into<P>> StdSort<T> for P {
     /// Sorts `Vec` in parallel.
     ///
     /// # Examples
     ///
     /// ```
     /// use aoko::standard::parallelisms::par_vec_ext::*;
+    /// use rayon::slice::ParallelSliceMut;
     ///
-    /// let v = vec![7, 4, 9, 2].sort();
+    /// let v = vec![7, 4, 9, 2].parsort();
     /// assert_eq!(v, vec![2, 4, 7, 9]);
     /// ```
-    fn sort(self) -> Vec<T> {
+    fn parsort(self) -> Self {
         self.tap_mut(|v| v.par_sort())
     }
 }

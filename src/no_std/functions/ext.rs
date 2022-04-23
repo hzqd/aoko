@@ -149,36 +149,6 @@ pub trait AnyExt: Sized {
     fn type_size(self) -> (usize, Self) {
         (core::mem::size_of::<Self>(), self)
     }
-    
-    /// Returns the name of a type as a string slice.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use aoko::no_std::functions::ext::*;
-    ///
-    /// assert_eq!(String::new().type_ref_name(), "&alloc::string::String");     // auto ref, auto deref.
-    /// assert_eq!((&String::new()).type_ref_name(), "&alloc::string::String");  // auto deref.
-    /// assert_eq!((&&String::new()).type_ref_name(), "&&alloc::string::String");
-    /// ```
-    fn type_ref_name(&self) -> &str {
-        core::any::type_name::<&Self>()
-    }
-    
-    /// Returns the size of a type in bytes.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use aoko::no_std::functions::ext::*;
-    ///
-    /// assert_eq!(().type_ref_size(), 0);      // auto ref, auto deref.
-    /// assert_eq!((&()).type_ref_size(), 0);   // auto deref.
-    /// assert_eq!((&&()).type_ref_size(), 8);
-    /// ```
-    fn type_ref_size(&self) -> usize {
-        core::mem::size_of::<Self>()
-    }
 
     /// Returns `Some(self)` if it satisfies the given predicate function,
     /// or `None` if it doesn't.
