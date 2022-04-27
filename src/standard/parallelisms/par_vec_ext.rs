@@ -1,24 +1,33 @@
 use crate::no_std::pipelines::tap::Tap;
-use std::{prelude::v1::*, iter::Product, ops::Add};
+use std::{prelude::v1::*, iter::Product, ops::{Add, DerefMut}};
 use rayon::{iter::Either, prelude::*};
 
 pub trait StdSort<T> {
-    fn parsort(self) -> Self;
+    fn psort(self) -> Self;
 }
 
-impl<T: Ord + Send, P: ParallelSliceMut<T>, X: Into<P>> StdSort<T> for P {
+impl<T, P> StdSort<T> for P where T: Ord + Send, P: DerefMut, P::Target: ParallelSliceMut<T> {
     /// Sorts `Vec` in parallel.
     ///
     /// # Examples
     ///
     /// ```
     /// use aoko::standard::parallelisms::par_vec_ext::*;
-    /// use rayon::slice::ParallelSliceMut;
     ///
-    /// let v = vec![7, 4, 9, 2].parsort();
+    /// // Array:
+    /// assert_eq!([6, 3, 8, 1].psort(), [1, 3, 6, 8]);
+    /// 
+    /// // Vec:
+    /// let v = vec![7, 4, 9, 2].psort();
     /// assert_eq!(v, vec![2, 4, 7, 9]);
+    /// 
+    /// // DST:
+    /// fn foo(arr: &mut [u8]) -> &mut [u8] {
+    ///     arr.psort()
+    /// }
+    /// assert_eq!(foo(&mut [8, 5, 10, 3]), [3, 5, 8, 10]);
     /// ```
-    fn parsort(self) -> Self {
+    fn psort(self) -> Self {
         self.tap_mut(|v| v.par_sort())
     }
 }
