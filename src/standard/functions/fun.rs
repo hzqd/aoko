@@ -8,16 +8,14 @@ use minstant::Instant;
 /// 
 /// Panics when the input is not UTF-8.
 pub fn read_line() -> String {
-    String::new()
-        .tap_mut(|s| stdin().read_line(s).expect("Invalid UTF-8"))
-        .trim_end().to_owned()
+    String::new().tap_mut(|s| stdin().read_line(s).expect("Invalid UTF-8"))
 }
 
 /// Breaks loop when command line input is empty. (Press `Enter` to exit/confirm.)
 ///
 /// Usually used in command line program as `.exe` file on Windows to prevent it from exiting directly.
 pub fn wait_enter() {
-    while read_line().bytes().next().is_some() {}
+    while read_line().trim_end().bytes().next().is_some() {}
 }
 
 /// Executes the given closure block and returns the duration of elapsed time interval.

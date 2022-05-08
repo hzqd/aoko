@@ -1,5 +1,5 @@
 use crate::no_std::pipelines::tap::Tap;
-use core::{cell::{Cell, RefCell}, ops::BitXorAssign, str::Utf8Error};
+use core::{cell::{Cell, RefCell}, ops::{BitXorAssign, Not}, str::Utf8Error};
 use alloc::{boxed::Box, format, rc::Rc, str, string::String, sync::Arc};
 use itertools::Itertools;
 
@@ -66,7 +66,7 @@ pub trait AnyExt1<R>: Sized {
     /// assert_eq!("Hello World".to_string().into_some(), "Hello".then_unless(|s| s.starts_with("Wor"), |s| format!("{} World", s)));
     /// ```
     fn then_unless(self, f1: impl FnOnce(&Self) -> bool, f2: impl FnOnce(Self) -> R) -> Option<R> {
-        if !f1(&self) { f2(self).into_some() } else { None }
+        if f1(&self).not() { f2(self).into_some() } else { None }
     }
 }
 
@@ -118,7 +118,7 @@ pub trait AnyExt: Sized {
     }
 
     /// Consumes `self`,
-    /// returns the name of a type as a string slice and the `self`.
+    /// returns the name of its type as a string slice and the receiver `self`.
     ///
     /// # Examples
     ///
@@ -134,7 +134,7 @@ pub trait AnyExt: Sized {
     }
     
     /// Consumes `self`,
-    /// returns the size of a type in bytes and the `self`.
+    /// returns the size of its type in number and the receiver `self`.
     ///
     /// # Examples
     ///
@@ -177,7 +177,7 @@ pub trait AnyExt: Sized {
     /// assert_eq!(Some("Hello"), "Hello".take_unless(|s| s.starts_with("Wor")));
     /// ```
     fn take_unless(self, f: impl FnOnce(&Self) -> bool) -> Option<Self> {
-        if !f(&self) { self.into_some() } else { None }
+        if f(&self).not() { self.into_some() } else { None }
     }
 }
 
@@ -218,7 +218,7 @@ impl<R> BoolExt<R> for bool {
     /// assert_eq!(Some("lo Wo"), s.starts_with("Wor").if_false(&s[3..8]));
     /// ```
     fn if_false(self, value: R) -> Option<R> {
-        if !self { value.into_some() } else { None }
+        if self.not() { value.into_some() } else { None }
     }
 
     /// Returns `Some(f())` if the receiver is `false`, or `None` otherwise
@@ -239,7 +239,7 @@ impl<R> BoolExt<R> for bool {
     /// assert_eq!(Some("lo Wo"), s.starts_with("Wor").then_false(|| &s[3..8]));
     /// ```
     fn then_false(self, f: impl FnOnce() -> R) -> Option<R> {
-        if !self { f().into_some() } else { None }
+        if self.not() { f().into_some() } else { None }
     }
 }
 
