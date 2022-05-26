@@ -13,15 +13,15 @@ pub trait AnyExt1<R>: Sized {
     /// ```
     /// use aoko::no_std::functions::ext::*;
     ///
-    /// fn fact(n: usize) -> usize {
+    /// fn factorial(n: u8) -> u8 {
     ///     n.y(|f, n| match n {
-    ///         0 | 1 => 1,
+    ///         0 => 1,
     ///         n => n * f(n - 1),
     ///     })
     /// }
-    /// assert_eq!(fact(5), 5 * 4 * 3 * 2 * 1);
+    /// assert_eq!(factorial(5), 5 * 4 * 3 * 2 * 1);
     ///
-    /// fn fibonacci(n: usize) -> usize {
+    /// fn fibonacci(n: u8) -> u8 {
     ///     n.y(|f, n| match n {
     ///         0 => 0,
     ///         1 => 1,
