@@ -33,6 +33,43 @@ macro_rules! lm {
     };
 }
 
+/// Conveniently create String variables.
+/// 
+/// # Examples
+/// 
+/// ```
+/// use aoko::{s, no_std::functions::fun::s};
+/// 
+/// s!(a = "a"; b = "b"; c = "c";);
+/// assert_eq!((a, b, c), (s("a"), s("b"), s("c")));
+/// ```
+#[macro_export]
+macro_rules! s {
+    ($($a:ident = $b:expr);* $(;)?) => {
+        $(let $a = aoko::no_std::functions::fun::s($b);)*
+    };
+}
+
+/// Conveniently create mutable String variables.
+/// 
+/// # Examples
+/// 
+/// ```
+/// use aoko::{sm, no_std::functions::fun::s};
+/// 
+/// sm!(a = "a"; b = "b"; c = "c";);
+/// assert_eq!((a, b, c), (s("a"), s("b"), s("c")));
+/// 
+/// a = s("x"); b = s("y"); c = s("z");
+/// assert_eq!((a, b, c), (s("x"), s("y"), s("z")));
+/// ```
+#[macro_export]
+macro_rules! sm {
+    ($($a:ident = $b:expr);* $(;)?) => {
+        $(let mut $a = aoko::no_std::functions::fun::s($b);)*
+    };
+}
+
 /// Swaps two variables' value.
 /// 
 /// # Principles

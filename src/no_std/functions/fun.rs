@@ -1,4 +1,18 @@
+use alloc::string::String;
 use core::ops::BitXorAssign;
+
+/// Conveniently create String variable.
+/// 
+/// # Examples
+/// 
+/// ```
+/// use aoko::no_std::functions::fun::s;
+/// 
+/// let s: String = s("Rust");
+/// ```
+pub fn s(x: impl Into<String>) -> String {
+    x.into()
+}
 
 /// Swaps two variables' value.
 /// 
