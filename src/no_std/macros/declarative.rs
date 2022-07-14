@@ -177,6 +177,45 @@ macro_rules! assert_nes {
     };
 }
 
+/// An alternative to if expression
+/// 
+/// # Examples
+/// 
+/// ``` rust
+/// use aoko::{when, assert_eqs};
+/// 
+/// assert_eqs! {
+///     0, when!(true  => 0 ; 1);
+///     1, when!(false => 0 ; 1);
+/// };
+/// 
+/// // Multiple expressions can't return,
+/// // generally used to perform operations.
+/// # fn op1() {}
+/// # let op2 = || ();
+/// # fn op3(a: u8) -> u8 { a + a }
+/// # let op4 = |a: u8| a * a;
+/// when! {
+///     true => op1() ; op2(),
+///     false => {
+///         op1();
+///         op3(1)
+///     } ; {
+///         op2();
+///         op4(1)
+///     },
+/// }
+/// ```
+#[macro_export]
+macro_rules! when {
+    ($predicate:expr => $true:expr ; $false:expr) => {
+        if $predicate { $true } else { $false }
+    };
+    ($($predicate:expr => $true:expr ; $false:expr),* $(,)?) => {
+        $(if $predicate { $true } else { $false };)*
+    };
+}
+
 /// `Struct::default()`: assigning user-defined values to fields directly.
 /// 
 /// # Principles
