@@ -245,7 +245,7 @@ macro_rules! when {
 /// ```
 #[macro_export]
 macro_rules! structs_default_decl {
-    ($vis:vis struct $s_name:ident;) => {$vis struct $s_name;};
+    ($vis:vis struct $s_name:ident; $($tail:tt)*) => {$vis struct $s_name; structs_default_decl! { $($tail)* }};
 
     ($(#[$attr:meta])* $vis:vis struct $name:ident $(<$($generic:tt),*>)? {
         $($field_vis:vis $field:ident: $type:ty = $val:expr),* $(,)?
@@ -300,7 +300,7 @@ macro_rules! structs_default_decl {
 /// ```
 #[macro_export]
 macro_rules! structs_new_decl {
-    ($vis:vis struct $s_name:ident;) => {$vis struct $s_name;};
+    ($vis:vis struct $s_name:ident; $($tail:tt)*) => {$vis struct $s_name; structs_new_decl! { $($tail)* }};
 
     ($(#[$attr:meta])* $vis:vis struct $s_name:ident $(<$($generic:tt),*>)? $(($($p_vis:vis $p_name:ident: $p_type:ty),* $(,)?))? $(where $($id:tt: $limit:tt),*)? {
         $($field_vis:vis $field:ident: $type:ty = $val:expr),* $(,)?
@@ -320,6 +320,60 @@ macro_rules! structs_new_decl {
             }
         }
         structs_new_decl! {
+            $($tail)*
+        }
+    };
+
+    () => {}
+}
+
+/// `Struct::from()`: assigning user-defined values to fields directly.
+/// 
+/// # Principles
+/// 
+/// Text replacement, automatic function generation.
+/// 
+/// # Examples
+/// 
+/// ``` rust
+/// use aoko::{structs_from_decl, assert_eqs};
+/// use std::fmt::Display;
+/// 
+/// structs_from_decl!(
+///     #[derive(Debug, Clone)]
+///     pub struct A<T>(from: Option<T>) where T: Display {
+///         pub foo: T = from.unwrap(),
+///     }
+///     struct B {}
+///     struct C;
+/// );
+/// 
+/// assert_eqs!(
+///     233, A::from(Some(233)).foo;
+/// );
+/// ```
+#[macro_export]
+macro_rules! structs_from_decl {
+    ($vis:vis struct $s_name:ident; $($tail:tt)*) => {$vis struct $s_name; structs_from_decl! { $($tail)* }};
+
+    ($vis:vis struct $s_name:ident {} $($tail:tt)*) => {$vis struct $s_name {} structs_from_decl! { $($tail)* }};
+
+    ($(#[$attr:meta])* $vis:vis struct $name:ident $(<$($generic:tt),*>)? ($from:ident: $from_type:ty) $(where $($id:tt: $limit:tt),*)? {
+        $($field_vis:vis $field:ident: $type:ty = $val:expr),* $(,)?
+    }
+    $($tail:tt)*) => {
+        $(#[$attr])*
+        $vis struct $name $(<$($generic),*>)? $(where $($id: $limit),*)? {
+            $($field_vis $field: $type),*
+        }
+        impl $(<$($generic),*>)? From<$from_type> for $name $(<$($generic),*>)? $(where $($id: $limit),*)? {
+            fn from($from: $from_type) -> Self {
+                $name {
+                    $($field: $val),*
+                }
+            }
+        }
+        structs_from_decl! {
             $($tail)*
         }
     };
