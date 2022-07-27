@@ -5,11 +5,6 @@ use minstant::Instant;
 /// This trait is to implement some extension functions,
 /// which need a generic return type, for any sized type.
 pub trait StdAnyExt1<R>: Sized {
-    /// Convert `value` to `Mutex::new(value)`
-    fn into_mutex(self) -> Mutex<Self> {
-        Mutex::new(self)
-    }
-
     /// Executes the given closure block and returns the duration of elapsed time interval.
     fn measure_time(self, f: impl FnOnce(Self) -> R) -> Duration {
         Instant::now().tap(|_| f(self)).elapsed()
@@ -57,6 +52,11 @@ pub trait StdAnyExt: Sized {
     /// Consumes `self`, `println!` as it is, returns `self`.
     fn echo(self) -> Self where Self: Display {
         self.tap(|s| println!("{s}"))
+    }
+
+    /// Convert `value` to `Mutex::new(value)`
+    fn into_mutex(self) -> Mutex<Self> {
+        Mutex::new(self)
     }
 }
 

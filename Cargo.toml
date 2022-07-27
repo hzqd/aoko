@@ -1,6 +1,6 @@
 [package]
 name = "aoko"
-version = "0.3.0-alpha.10" # Alpha(α) --> Beta(β) --> Delta(δ) --> Eta(η) --> Inda(India) --> Lima --> Oca(Oscar) --> Papa -> QBa(丘比) --> Roma -> Sierra --> Tanga(Tango) --> Vodka(Gin) --> Zala(Zulu)
+version = "0.3.0-alpha.11" # Alpha(α) --> Beta(β) --> Delta(δ) --> Eta(η) --> Inda(India) --> Lima --> Oca(Oscar) --> Papa -> QBa(丘比) --> Roma -> Sierra --> Tanga(Tango) --> Vodka(Gin) --> Zala(Zulu)
 authors = ["hzqd <hzqelf@yeah.net>"]
 edition = "2021"
 description = "A Rust extension library."
