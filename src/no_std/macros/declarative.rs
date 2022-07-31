@@ -128,7 +128,7 @@ macro_rules! swap_mut {
 /// ```
 /// use aoko::asserts;
 /// 
-/// asserts!(true; 1 + 1 == 2; "".chars().next().is_none(););
+/// asserts!(true; 1 + 1 == 2; "".bytes().next().is_none(););
 /// ```
 #[macro_export]
 macro_rules! asserts {
@@ -177,7 +177,7 @@ macro_rules! assert_nes {
     };
 }
 
-/// An alternative to if expression
+/// An alternative to if expression.
 /// 
 /// # Examples
 /// 
@@ -204,15 +204,17 @@ macro_rules! assert_nes {
 ///         op2();
 ///         op4(1)
 ///     },
-/// }
+///     ^a: (u8, u128) = true => (0,1) ; (2,3),
+/// };
+/// assert_eqs!(a, (0, 1););
 /// ```
 #[macro_export]
 macro_rules! when {
     ($predicate:expr => $true:expr ; $false:expr) => {
         if $predicate { $true } else { $false }
     };
-    ($($predicate:expr => $true:expr ; $false:expr),* $(,)?) => {
-        $(if $predicate { $true } else { $false };)*
+    ($($(^$a:ident $(:$t:ty)? =)? $predicate:expr => $true:expr ; $false:expr),* $(,)?) => {
+        $($(let $a $(:$t)? =)? if $predicate { $true } else { $false };)*
     };
 }
 
