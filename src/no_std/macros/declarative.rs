@@ -204,16 +204,20 @@ macro_rules! assert_nes {
 ///         op2();
 ///         op4(1)
 ///     },
-///     ^a: (u8, u128) = true => (0,1) ; (2,3),
+///     let a = true => "foo" ; "bar",
+///     let b: (u8, u128) = false => (0,1) ; (2,3),
 /// };
-/// assert_eqs!(a, (0, 1););
+/// assert_eqs! {
+///     a, "foo";
+///     b, (2, 3);
+/// };
 /// ```
 #[macro_export]
 macro_rules! when {
     ($predicate:expr => $true:expr ; $false:expr) => {
         if $predicate { $true } else { $false }
     };
-    ($($(^$a:ident $(:$t:ty)? =)? $predicate:expr => $true:expr ; $false:expr),* $(,)?) => {
+    ($($(let $a:ident $(:$t:ty)? =)? $predicate:expr => $true:expr ; $false:expr),* $(,)?) => {
         $($(let $a $(:$t)? =)? if $predicate { $true } else { $false };)*
     };
 }
@@ -239,10 +243,12 @@ macro_rules! when {
 ///     struct C;
 /// );
 /// 
+/// let a = A::default();
+/// 
 /// assert_eqs!(
-///     233, A::default().foo;
-///     "abc", A::default().bar;
-///     "A { foo: 233, bar: \"abc\" }", format!("{:?}", A::default());
+///     233, a.foo;
+///     "abc", a.bar;
+///     "A { foo: 233, bar: \"abc\" }", format!("{:?}", a);
 /// );
 /// ```
 #[macro_export]
@@ -292,12 +298,12 @@ macro_rules! structs_default_decl {
 ///     struct C;
 /// );
 /// 
-/// let test = A::new("foo");
+/// let a = A::new("foo");
 /// 
 /// assert_eqs!(
-///     "foo", test.foo;
-///     "bar", test.bar;
-///     format!("{:?}", test), "A { foo: \"foo\", bar: \"bar\" }";
+///     "foo", a.foo;
+///     "bar", a.bar;
+///     "A { foo: \"foo\", bar: \"bar\" }", format!("{:?}", a);
 /// );
 /// ```
 #[macro_export]
@@ -350,8 +356,10 @@ macro_rules! structs_new_decl {
 ///     struct C;
 /// );
 /// 
+/// let a = A::from(Some(233));
+/// 
 /// assert_eqs!(
-///     233, A::from(Some(233)).foo;
+///     233, a.foo;
 /// );
 /// ```
 #[macro_export]
