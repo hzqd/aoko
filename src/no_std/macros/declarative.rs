@@ -3,13 +3,13 @@
 /// # Examples
 /// 
 /// ```
-/// use aoko::l;
+/// use aoko::val;
 /// 
-/// l!(foo = 233; bar: u16 = 666;);
+/// val!(foo = 233; bar: u16 = 666;);
 /// assert_eq!((233, 666), (foo, bar));
 /// ```
 #[macro_export]
-macro_rules! l {
+macro_rules! val {
     ($($a:ident $(:$t:ty)? = $b:expr);* $(;)?) => {
         $(let $a $(:$t)? = $b;)*
     };
@@ -20,14 +20,14 @@ macro_rules! l {
 /// # Examples
 /// 
 /// ```
-/// use aoko::lm;
+/// use aoko::var;
 /// 
-/// lm!(foo = 233; bar: u16 = 1024;);
+/// var!(foo = 233; bar: u16 = 1024;);
 /// foo = 666; bar = 2048;
 /// assert_eq!((666, 2048), (foo, bar));
 /// ```
 #[macro_export]
-macro_rules! lm {
+macro_rules! var {
     ($($a:ident $(:$t:ty)? = $b:expr);* $(;)?) => {
         $(let mut $a $(:$t)? = $b;)*
     };
