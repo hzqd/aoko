@@ -3,6 +3,8 @@ use core::{cell::{Cell, RefCell}, ops::{BitXorAssign, Not}, str::Utf8Error};
 use alloc::{boxed::Box, format, rc::Rc, str, string::String, sync::Arc};
 use itertools::Itertools;
 
+use super::fam::{OptionType, Applicative};
+
 /// This trait is to implement some extension functions,
 /// which need a generic return type, for any sized type.
 pub trait AnyExt1<R>: Sized {
@@ -79,7 +81,7 @@ pub trait AnyExt: Sized {
 
     /// Convert `value` to `Some(value)`
     fn into_some(self) -> Option<Self> {
-        self.into()
+        OptionType::pure(self)
     }
 
     /// Convert `value` to `Ok(value)`
@@ -263,8 +265,10 @@ impl<T> ArrExt for &mut [T] where T: BitXorAssign<T> + Copy {
     /// # Examples
     ///
     /// ```
+    /// use aoko::no_std::functions::ext::*;
+    /// 
     /// let mut v = [0, 1, 2, 3, 4];
-    /// v.swap(1, 3);
+    /// v.swap_xor(1, 3);
     /// assert!(v == [0, 3, 2, 1, 4]);
     /// ```
     /// 
@@ -286,11 +290,125 @@ impl<T> ArrExt for &mut [T] where T: BitXorAssign<T> + Copy {
 
 pub trait StrExt {
     fn split_not_empty_and_join(self, split: &str, join: &str) -> String;
+    fn wildcard_match(self, pattern_text: &str) -> bool;
 }
 
 impl StrExt for &str {
     fn split_not_empty_and_join(self, split: &str, join: &str) -> String {
         self.split(split).filter(|s| s.bytes().next().is_some()).join(join)
+    }
+
+    /// https://gist.github.com/mo-xiaoming/9fb87da16d6ef459e1b94c16055b9978
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use std::ops::Not;
+    /// use aoko::{asserts, no_std::functions::ext::*};
+    /// 
+    /// asserts! {
+    ///     "abc".wildcard_match("abc");
+    ///     "a0c".wildcard_match("abc*").not();
+    ///     "mississippi".wildcard_match("mississipp**");
+    ///     "mississippi".wildcard_match("mississippi*");
+    ///     "mississippi.river".wildcard_match("*.*");
+    ///     "mississippi.river".wildcard_match("*ip*");
+    ///     "mississippi.river".wildcard_match("m*i*.*r");
+    ///     "mississippi.river".wildcard_match("m*x*.*r").not();
+    /// }
+    /// ```
+    fn wildcard_match(self, pattern: &str) -> bool {
+        struct AfterWildcard {
+            plain_idx: usize,
+            pattern_idx: usize,
+        }
+        // it is None if there are no prev wildcard
+        // if there were, then `plain_idx` stores *next* index in plain text that wildcard supposes to match
+        //                     `pattern_idx` stores *next* index right after the wildcard
+        //                     when they first assigned
+        //                     latter they become to be the next possible non matches
+        //                     anything pre these two considered match
+        let mut after_wildcard: Option<AfterWildcard> = None;
+
+        // current indices moving in two strings
+        let mut cur_pos_plain_text = 0_usize;
+        let mut cur_pos_pattern_text = 0_usize;
+
+        loop {
+            // current chars in two strings
+            let plain_c = self.chars().nth(cur_pos_plain_text);
+            let pattern_c = pattern.chars().nth(cur_pos_pattern_text);
+
+            if plain_c.is_none() {
+                // plain text ends
+                match pattern_c {
+                    None => return true, // pattern text ends as well, happy ending
+                    Some('*') => // since we make wildcard matches non-eager
+                                // go back to use `after_wildcard` only make it less possible to match
+                        // matches if pattern only have '*' till the end
+                        return pattern[cur_pos_pattern_text..].chars().all(|e| e == '*'),
+
+                    Some(w) => {
+                        // go back to last wildcard and try next possible char in plain text
+                        let Some(AfterWildcard { ref mut plain_idx, pattern_idx }) = after_wildcard else {
+                            // if no prev wildcard exists, then that's it, no match
+                            return false;
+                        };
+                        // move `plain_idx` in `after_wildcard` to the next position of `w` in plain text
+                        // any positions before that is impossible to match the pattern text
+                        let Some(i) = self[*plain_idx..].chars().position(|c| c == w) else {
+                            // if `w` doesn't even exists in plain text, then give up
+                            return false;
+                        };
+                        *plain_idx = i;
+                        cur_pos_plain_text = *plain_idx;
+                        cur_pos_pattern_text = pattern_idx;
+                        continue;
+                    }
+                }
+            } else if plain_c != pattern_c {
+                if pattern_c == Some('*') {
+                    // skip '*'s, one is as good as many
+                    let Some(i) = pattern[cur_pos_pattern_text..].chars().position(|e| e != '*') else {
+                        // even better, pattern text ends with a '*', which matches everything
+                        return true;
+                    };
+                    cur_pos_pattern_text += i;
+
+                    // pattern text doesn't end with this '*', then find next non '*' char
+                    let w = pattern.chars().nth(cur_pos_pattern_text).unwrap();
+                    // char in pattern text does exist in plain text
+                    let Some(i) = self[cur_pos_plain_text..].chars().position(|c| c == w) else {
+                        // otherwise, we cannot match
+                        return false;
+                    };
+                    // update both positions
+                    after_wildcard.replace(AfterWildcard {
+                        plain_idx: i,
+                        pattern_idx: cur_pos_pattern_text,
+                    });
+                    continue;
+                }
+                let Some(AfterWildcard { pattern_idx, .. }) = after_wildcard else {
+                    return false;
+                };
+                // go back to last wildcard
+                if pattern_idx != cur_pos_pattern_text {
+                    cur_pos_pattern_text = pattern_idx;
+                    // matches this char, move pattern idx forward
+                    if pattern.chars().nth(cur_pos_pattern_text) == plain_c {
+                        cur_pos_pattern_text += 1;
+                    }
+                }
+                // try next plain text char anyway, current one gets swallowed by '*'
+                // or by a matching char in pattern text
+                cur_pos_plain_text += 1;
+                continue;
+            } else {
+                cur_pos_plain_text += 1;
+                cur_pos_pattern_text += 1;
+            }
+        }
     }
 }
 
