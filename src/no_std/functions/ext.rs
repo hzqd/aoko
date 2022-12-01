@@ -3,7 +3,7 @@ use core::{cell::{Cell, RefCell}, ops::{BitXorAssign, Not}, str::Utf8Error};
 use alloc::{boxed::Box, format, rc::Rc, str, string::String, sync::Arc};
 use itertools::Itertools;
 
-use super::fam::{OptionType, Applicative};
+use super::fam::{Maybe, Either, Applicative};
 
 /// This trait is to implement some extension functions,
 /// which need a generic return type, for any sized type.
@@ -81,17 +81,17 @@ pub trait AnyExt: Sized {
 
     /// Convert `value` to `Some(value)`
     fn into_some(self) -> Option<Self> {
-        OptionType::pure(self)
+        Maybe::pure(self)
     }
 
     /// Convert `value` to `Ok(value)`
     fn into_ok<B>(self) -> Result<Self, B> {
-        Ok(self)
+        Either::pure(self)
     }
 
     /// Convert `value` to `Err(value)`
     fn into_err<A>(self) -> Result<A, Self> {
-        Err(self)
+        Result::from(Err(self))
     }
 
     /// Convert `value` to `Box::new(value)`
@@ -488,6 +488,40 @@ impl<T> OptionExt<T> for Option<T> {
         match self {
             Some(_) => self,
             None => f().into_some()
+        }
+    }
+}
+
+/// This trait is to implement some extension functions for `Result<T, E>` type.
+pub trait ResultExt<T, E> {
+    fn zip<U>(self, other: Result<U, E>) -> Result<(T, U), E>;
+}
+
+impl<T, E> ResultExt<T, E> for Result<T, E> {
+    /// Zips `self` with another `Result`.
+    ///
+    /// If `self` is `Ok(s)` and `other` is `Ok(o)`, this method returns `Ok((s, o))`.
+    /// Otherwise, `Err` is returned.
+    /// 
+    /// # Examples
+    ///
+    /// ```
+    /// use aoko::{assert_eqs, no_std::functions::ext::*};
+    /// 
+    /// let x = Ok(1);
+    /// let y = Ok("hi");
+    /// let z = Err::<u8, _>(());
+    ///
+    /// assert_eqs! {
+    ///     x.zip(y), Ok((1, "hi"));
+    ///     x.zip(z), Err(());
+    /// }
+    /// ```
+    fn zip<U>(self, other: Result<U, E>) -> Result<(T, U), E> {
+        match (self, other) {
+            (Ok(a), Ok(b)) => (a, b).into_ok(),
+            (Err(e), _) => e.into_err(),
+            (_, Err(e)) => e.into_err(),
         }
     }
 }
