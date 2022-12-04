@@ -469,11 +469,15 @@ impl U128Ext for u128 {
 }
 
 /// This trait is to implement some extension functions for `Option<T>` type.
-pub trait OptionExt<T> {
-    fn or_else_some(self, f: impl FnOnce() -> T) -> Self;
+pub trait OptionExt {
+    type Enter;
+    fn or_else_some(self, f: impl FnOnce() -> Self::Enter) -> Self;
+    fn apply<R>(self, f: Option<impl FnMut(Self::Enter) -> R>) -> Option<R>;
 }
 
-impl<T> OptionExt<T> for Option<T> {
+impl<T> OptionExt for Option<T> {
+    type Enter = T;
+
     /// This function is similar to `or_else`,
     /// but convert closure result to `Some` automatically.
     /// 
@@ -484,20 +488,43 @@ impl<T> OptionExt<T> for Option<T> {
     /// 
     /// assert_eq!(Some(0), None::<u8>.or_else_some(|| 0));
     /// ```
-    fn or_else_some(self, f: impl FnOnce() -> T) -> Self {
+    fn or_else_some(self, f: impl FnOnce() -> Self::Enter) -> Self {
         match self {
             Some(_) => self,
             None => f().into_some()
         }
     }
+
+    /// # Examples
+    /// 
+    /// ```
+    /// use std::ops::Not;
+    /// use aoko::{assert_eqs, no_std::functions::{fun::s, ext::*}};
+    /// 
+    /// assert_eqs! {
+    ///     Some(1),         0.into_some().apply(Some(|x| x + 1));
+    ///     Some(true),      false.into_some().apply(Some(|x: bool| x.not()));
+    ///     Some(s("abcd")), s("ab").into_some().apply(Some(|x| x + "cd"));
+    /// }
+    /// ```
+    fn apply<R>(self, f: Option<impl FnMut(Self::Enter) -> R>) -> Option<R> {
+        Maybe::apply(self, f)
+    }
 }
 
 /// This trait is to implement some extension functions for `Result<T, E>` type.
-pub trait ResultExt<T, E> {
-    fn zip<U>(self, other: Result<U, E>) -> Result<(T, U), E>;
+pub trait ResultExt {
+    type Succ;
+    type Fail;
+
+    fn zip<Ok2nd>(self, other: Result<Ok2nd, Self::Fail>) -> Result<(Self::Succ, Ok2nd), Self::Fail>;
+    fn apply<NewOk>(self, f: Result<impl FnMut(Self::Succ) -> NewOk, Self::Fail>) -> Result<NewOk, Self::Fail>;
 }
 
-impl<T, E> ResultExt<T, E> for Result<T, E> {
+impl<T, E> ResultExt for Result<T, E> {
+    type Succ = T;
+    type Fail = E;
+
     /// Zips `self` with another `Result`.
     ///
     /// If `self` is `Ok(s)` and `other` is `Ok(o)`, this method returns `Ok((s, o))`.
@@ -517,12 +544,31 @@ impl<T, E> ResultExt<T, E> for Result<T, E> {
     ///     x.zip(z), Err(());
     /// }
     /// ```
-    fn zip<U>(self, other: Result<U, E>) -> Result<(T, U), E> {
+    fn zip<Ok2nd>(self, other: Result<Ok2nd, Self::Fail>) -> Result<(Self::Succ, Ok2nd), Self::Fail> {
         match (self, other) {
             (Ok(a), Ok(b)) => (a, b).into_ok(),
             (Err(e), _) => e.into_err(),
             (_, Err(e)) => e.into_err(),
         }
+    }
+
+    /// # Examples
+    /// 
+    /// ```
+    /// use std::ops::Not;
+    /// use aoko::{assert_eqs, no_std::functions::{fun::s, ext::*}};
+    /// 
+    /// let mut f = Ok(|x| x + "cd");
+    /// f = Err(());
+    /// 
+    /// assert_eqs! {
+    ///     Ok::<_, ()>(0), Ok(0).apply(Ok(|x| x / 1));
+    ///     Err(-1),        Err(-1).apply(Ok(|x: bool| x.not()));
+    ///     Err(()),        Ok(s("ab")).apply(f);
+    /// }
+    /// ```
+    fn apply<NewOk>(self, f: Result<impl FnMut(Self::Succ) -> NewOk, Self::Fail>) -> Result<NewOk, Self::Fail> {
+        Either::apply(self, f)
     }
 }
 
