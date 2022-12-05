@@ -502,9 +502,9 @@ impl<T> OptionExt for Option<T> {
     /// use aoko::{assert_eqs, no_std::functions::{fun::s, ext::*}};
     /// 
     /// assert_eqs! {
-    ///     Some(1),         0.into_some().apply(Some(|x| x + 1));
-    ///     Some(true),      false.into_some().apply(Some(|x: bool| x.not()));
-    ///     Some(s("abcd")), s("ab").into_some().apply(Some(|x| x + "cd"));
+    ///     Some(1),         Some(0).apply(Some(|x| x + 1));
+    ///     Some(true),      Some(false).apply(Some(|x: bool| x.not()));
+    ///     Some(s("abcd")), Some(s("ab")).apply(Some(|x| x + "cd"));
     /// }
     /// ```
     fn apply<R>(self, f: Option<impl FnMut(Self::Enter) -> R>) -> Option<R> {
@@ -547,8 +547,7 @@ impl<T, E> ResultExt for Result<T, E> {
     fn zip<Ok2nd>(self, other: Result<Ok2nd, Self::Fail>) -> Result<(Self::Succ, Ok2nd), Self::Fail> {
         match (self, other) {
             (Ok(a), Ok(b)) => (a, b).into_ok(),
-            (Err(e), _) => e.into_err(),
-            (_, Err(e)) => e.into_err(),
+            (Err(e), _) | (_, Err(e)) => e.into_err(),
         }
     }
 
