@@ -1,9 +1,8 @@
 use crate::no_std::pipelines::tap::Tap;
 use core::{cell::{Cell, RefCell}, ops::{BitXorAssign, Not}, str::Utf8Error};
-use alloc::{boxed::Box, format, rc::Rc, str, string::String, sync::Arc};
+use alloc::{boxed::Box, format, rc::Rc, str, string::String, sync::Arc, vec::Vec};
 use itertools::Itertools;
-
-use super::fam::{Maybe, Either, Applicative};
+use super::fam::{Applicative, Maybe, Either, Vector};
 
 /// This trait is to implement some extension functions,
 /// which need a generic return type, for any sized type.
@@ -517,8 +516,8 @@ pub trait ResultExt {
     type Succ;
     type Fail;
 
-    fn zip<Ok2nd>(self, other: Result<Ok2nd, Self::Fail>) -> Result<(Self::Succ, Ok2nd), Self::Fail>;
-    fn apply<NewOk>(self, f: Result<impl FnMut(Self::Succ) -> NewOk, Self::Fail>) -> Result<NewOk, Self::Fail>;
+    fn zip<T>(self, other: Result<T, Self::Fail>) -> Result<(Self::Succ, T), Self::Fail>;
+    fn apply<T>(self, f: Result<impl FnMut(Self::Succ) -> T, Self::Fail>) -> Result<T, Self::Fail>;
 }
 
 impl<T, E> ResultExt for Result<T, E> {
@@ -544,7 +543,7 @@ impl<T, E> ResultExt for Result<T, E> {
     ///     x.zip(z), Err(());
     /// }
     /// ```
-    fn zip<Ok2nd>(self, other: Result<Ok2nd, Self::Fail>) -> Result<(Self::Succ, Ok2nd), Self::Fail> {
+    fn zip<U>(self, other: Result<U, Self::Fail>) -> Result<(Self::Succ, U), Self::Fail> {
         match (self, other) {
             (Ok(a), Ok(b)) => (a, b).into_ok(),
             (Err(e), _) | (_, Err(e)) => e.into_err(),
@@ -566,8 +565,34 @@ impl<T, E> ResultExt for Result<T, E> {
     ///     Err(()),        Ok(s("ab")).apply(f);
     /// }
     /// ```
-    fn apply<NewOk>(self, f: Result<impl FnMut(Self::Succ) -> NewOk, Self::Fail>) -> Result<NewOk, Self::Fail> {
+    fn apply<U>(self, f: Result<impl FnMut(Self::Succ) -> U, Self::Fail>) -> Result<U, Self::Fail> {
         Either::apply(self, f)
+    }
+}
+
+pub trait VecExt {
+    type Item;
+
+    fn apply<U>(self, f: Vec<impl FnMut(Self::Item) -> U>) -> Vec<U>;
+}
+
+impl<T> VecExt for Vec<T> {
+    type Item = T;
+
+    /// Applies the function to the element.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use aoko::no_std::functions::ext::*;
+    /// 
+    /// let v = vec![2, 4, 6];
+    /// let f = Vec::from([|x| x + 1, |y| y * 2, |z| z / 3]);
+    /// 
+    /// assert_eq!(v.apply(f), vec![3, 8, 2]);
+    /// ```
+    fn apply<U>(self, f: Vec<impl FnMut(Self::Item) -> U>) -> Vec<U> {
+        Vector::apply(self, f)
     }
 }
 

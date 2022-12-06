@@ -1,4 +1,5 @@
 use core::marker::PhantomData;
+use alloc::{vec, vec::Vec};
 
 pub trait Functor<T> {
     type Type<A>;
@@ -194,7 +195,7 @@ impl<T> Applicative<T> for Id<T> {
     /// 
     /// assert_eq!(Id(0), Id::pure(0));
     /// ```
-    fn pure(inner: T) -> Id<T> {
+    fn pure(inner: T) -> Self::Type<T> {
         Id(inner)
     }
 
@@ -224,5 +225,48 @@ impl<T> Monad<T> for Id<T> {
     /// ```
     fn bind<U>(value: Self::Type<T>, mut f: impl FnMut(T) -> Self::Type<U>) -> Self::Type<U> {
         f(value.0)
+    }
+}
+
+pub struct Vector;
+
+impl<T> Functor<T> for Vector {
+    type Type<A> = Vec<A>;
+
+    /// # Examples
+    /// 
+    /// ```
+    /// use aoko::no_std::functions::fam::*;
+    /// 
+    /// assert_eq!(vec![2, 4, 6], Vector::fmap(vec![1, 3, 5], |x| x + 1));
+    /// ```
+    fn fmap<U>(value: Self::Type<T>, f: impl FnMut(T) -> U) -> Self::Type<U> {
+        value.into_iter().map(f).collect()
+    }
+}
+
+impl<T> Applicative<T> for Vector {
+    /// # Examples
+    /// 
+    /// ```
+    /// use aoko::no_std::functions::fam::*;
+    /// 
+    /// assert_eq!(vec![0], Vector::pure(0));
+    /// ```
+    fn pure(inner: T) -> Self::Type<T> {
+        vec![inner]
+    }
+
+    /// # Examples
+    /// 
+    /// ```
+    /// use aoko::no_std::functions::fam::*;
+    /// 
+    /// let add_one = |x| x + 1;
+    /// let mul_two = |y| y * 2;
+    /// assert_eq!(vec![4, 4], Vector::apply(vec![3, 2], Vec::from([add_one, mul_two])));
+    /// ```
+    fn apply<U>(value: Self::Type<T>, f: Self::Type<impl FnMut(T) -> U>) -> Self::Type<U> {
+        value.into_iter().zip(f.into_iter()).map(|(x, mut f)| f(x)).collect()
     }
 }
