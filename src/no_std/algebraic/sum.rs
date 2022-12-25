@@ -1,7 +1,7 @@
 use crate::no_std::{algebraic::zero::ParseUnitError, functions::ext::AnyExt};
 use core::str::FromStr;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum TimeUnit {
     Nanos,
     Micros,
