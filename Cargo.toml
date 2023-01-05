@@ -1,9 +1,10 @@
 [package]
 name = "aoko"
-version = "0.3.0-alpha.17" # Alpha(α) --> Beta(β) --> Delta(δ) --> Eta(η) --> Inda(India) --> Lima --> Oca(Oscar) --> Papa -> QBa(丘比) --> Roma -> Sierra --> Tanga(Tango) --> Vodka(Gin) --> Zala(Zulu)
+version = "0.3.0-alpha.18" # Alpha(α) --> Beta(β) --> Delta(δ) --> Eta(η) --> Inda(India) --> Lima --> Oca(Oscar) --> Papa -> QBa(丘比) --> Roma -> Sierra --> Tanga(Tango) --> Vodka(Gin) --> Zala(Zulu)
 authors = ["hzqd <hzqelf@yeah.net>"]
 edition = "2021"
 description = "A Rust extension library."
+repository = "https://github.com/hzqd/aoko"
 license = "MIT OR Apache-2.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -11,6 +12,7 @@ license = "MIT OR Apache-2.0"
 [features]
 default = ["std"] # Default to using the features
 std = ["no-std-compat/std", "minstant"]
+async = ["tokio"]
 paral = ["rayon"]
 
 # A no_std compatibility layer
@@ -23,9 +25,15 @@ features = ["alloc"]
 version = "0.1"
 optional = true
 
-# A iter extension
+# An iter extension
 [dependencies.itertools]
 version = "0.10"
+
+# An async runtime
+[dependencies.tokio]
+version = "1.23"
+optional = true
+features = ["full"]
 
 # A data parallelism library
 [dependencies.rayon]
