@@ -1,4 +1,4 @@
-use crate::no_std::pipelines::tap::Tap;
+use crate::no_std::pipelines::{pipe::Pipe, tap::Tap};
 use core::{cell::{Cell, RefCell}, ops::{BitXorAssign, Not}, str::Utf8Error};
 use alloc::{boxed::Box, format, rc::Rc, str, string::String, sync::Arc, vec::Vec};
 use itertools::Itertools;
@@ -80,12 +80,12 @@ pub trait AnyExt: Sized {
 
     /// Convert `value` to `Some(value)`
     fn into_some(self) -> Option<Self> {
-        Maybe::pure(self)
+        self.pipe(Maybe::pure)
     }
 
     /// Convert `value` to `Ok(value)`
     fn into_ok<B>(self) -> Result<Self, B> {
-        Either::pure(self)
+        self.pipe(Either::pure)
     }
 
     /// Convert `value` to `Err(value)`
@@ -95,27 +95,37 @@ pub trait AnyExt: Sized {
 
     /// Convert `value` to `Box::new(value)`
     fn into_box(self) -> Box<Self> {
-        Box::new(self)
+        self.pipe(Box::new)
     }
 
     /// Convert `value` to `Cell::new(value)`
     fn into_cell(self) -> Cell<Self> {
-        Cell::new(self)
+        self.pipe(Cell::new)
     }
 
     /// Convert `value` to `RefCell::new(value)`
-    fn into_ref_cell(self) -> RefCell<Self> {
-        RefCell::new(self)
+    fn into_refcell(self) -> RefCell<Self> {
+        self.pipe(RefCell::new)
     }
 
     /// Convert `value` to `Rc::new(value)`
     fn into_rc(self) -> Rc<Self> {
-        Rc::new(self)
+        self.pipe(Rc::new)
+    }
+
+    /// Convert `value` to `Rc::new(Cell::new(value))`
+    fn into_rc_cell(self) -> Rc<Cell<Self>> {
+        Rc::new.compose(Cell::new)(self)
+    }
+
+    /// Convert `value` to `Rc::new(RefCell::new(value))`
+    fn into_rc_refcell(self) -> Rc<RefCell<Self>> {
+        Rc::new.compose(RefCell::new)(self)
     }
 
     /// Convert `value` to `Arc::new(value)`
     fn into_arc(self) -> Arc<Self> {
-        Arc::new(self)
+        self.pipe(Arc::new)
     }
 
     /// Consumes `self`,
@@ -596,12 +606,27 @@ impl<T> VecExt for Vec<T> {
     }
 }
 
-/// This trait is to implement some extension functions whose type is `FnOnce`.
-pub trait FnOnceExt<P1, P2, R> {
-    fn partial2(self, p2: P2) -> Box<dyn FnOnce(P1) -> R>;
+/// This trait is to implement some extension functions with currying two parameters.
+pub trait Curry2<'a, P1, P2, R> {
+    fn partial2(self, p1: P1) -> Box<dyn FnOnce(P2) -> R + 'a>;
+    fn partial2_rev(self, p2: P2) -> Box<dyn FnOnce(P1) -> R + 'a>;
 }
 
-impl<P1, P2: 'static, R, F> FnOnceExt<P1, P2, R> for F where F: FnOnce(P1, P2) -> R + 'static {
+impl<'a, P1: 'a, P2: 'a, R, F> Curry2<'a, P1, P2, R> for F where F: FnOnce(P1, P2) -> R + 'a {
+    /// Two parameters, currying from left to right.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use aoko::no_std::functions::ext::*;
+    ///
+    /// fn foo(a: u8, b: u8) -> u8 { a - b }
+    /// assert_eq!(foo.partial2(3)(2), 1);
+    /// ```
+    fn partial2(self, p1: P1) -> Box<dyn FnOnce(P2) -> R + 'a> {
+        (|p2| self(p1, p2)).into_box()
+    }
+
     /// Two parameters, currying from right to left.
     ///
     /// # Examples
@@ -610,9 +635,53 @@ impl<P1, P2: 'static, R, F> FnOnceExt<P1, P2, R> for F where F: FnOnce(P1, P2) -
     /// use aoko::no_std::functions::ext::*;
     ///
     /// fn foo(a: u8, b: u8) -> u8 { a - b }
-    /// assert_eq!(foo.partial2(2)(3), 1);
+    /// assert_eq!(foo.partial2_rev(2)(3), 1);
     /// ```
-    fn partial2(self, p2: P2) -> Box<dyn FnOnce(P1) -> R> {
-        (move |p1| self(p1, p2)).into_box()
+    fn partial2_rev(self, p2: P2) -> Box<dyn FnOnce(P1) -> R + 'a> {
+        (|p1| self(p1, p2)).into_box()
+    }
+}
+
+/// This trait is to implement some extension functions whose type is `FnOnce`.
+pub trait FnOnceExt<'a, T, U, R> {
+    fn combine(self, g: impl FnOnce(U) -> R + 'a) -> Box<dyn FnOnce(T) -> R + 'a>;
+    fn compose(self, g: impl FnOnce(R) -> T + 'a) -> Box<dyn FnOnce(R) -> U + 'a>;
+}
+
+impl<'a, T, U, R, F> FnOnceExt<'a, T, U, R> for F where F: FnOnce(T) -> U + 'a {
+    /// Combining two functions.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use aoko::no_std::functions::{ext::*, fun::s};
+    ///
+    /// fn inc(arr: &[u8]) -> Vec<u8> { arr.iter().map(|byte| byte + 1).collect() }
+    /// fn sum(v: Vec<u8>) -> u8 { v.iter().sum() }
+    /// fn to_string(x: u8) -> String { x.to_string() }
+    /// 
+    /// let func = inc.combine(sum).combine(to_string);
+    /// assert_eq!(s("45"), func(&[0, 1, 2, 3, 4, 5, 6, 7, 8]));
+    /// ```
+    fn combine(self, g: impl FnOnce(U) -> R + 'a) -> Box<dyn FnOnce(T) -> R + 'a> {
+        (|x: T| x.pipe(self).pipe(g)).into_box()    // |x| g(self(x))
+    }
+
+    /// Combining two functions in reverse order.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use aoko::no_std::functions::{ext::*, fun::s};
+    ///
+    /// fn inc(arr: &[u8]) -> Vec<u8> { arr.iter().map(|byte| byte + 1).collect() }
+    /// fn sum(v: Vec<u8>) -> u8 { v.iter().sum() }
+    /// fn to_string(x: u8) -> String { x.to_string() }
+    /// 
+    /// let func = to_string.compose(sum).compose(inc);
+    /// assert_eq!(s("45"), func(&[0, 1, 2, 3, 4, 5, 6, 7, 8]));
+    /// ```
+    fn compose(self, g: impl FnOnce(R) -> T + 'a) -> Box<dyn FnOnce(R) -> U + 'a> {
+        g.combine(self)                             // |x| self(g(x))
     }
 }

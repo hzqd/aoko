@@ -1,5 +1,5 @@
-use crate::no_std::pipelines::{tap::Tap, pipe::Pipe};
-use std::{prelude::v1::*, fmt::{Debug, Display}, time::Duration, sync::Mutex};
+use crate::no_std::{pipelines::{tap::Tap, pipe::Pipe}, functions::ext::FnOnceExt};
+use std::{prelude::v1::*, fmt::{Debug, Display}, time::Duration, sync::{Arc, Mutex, RwLock}};
 use minstant::Instant;
 
 /// This trait is to implement some extension functions,
@@ -56,7 +56,22 @@ pub trait StdAnyExt: Sized {
 
     /// Convert `value` to `Mutex::new(value)`
     fn into_mutex(self) -> Mutex<Self> {
-        Mutex::new(self)
+        self.pipe(Mutex::new)
+    }
+
+    /// Convert `value` to `Arc::new(Mutex::new(value))`
+    fn into_arc_mutex(self) -> Arc<Mutex<Self>> {
+        Arc::new.compose(Mutex::new)(self)
+    }
+
+    /// Convert `value` to `RwLock::new(value)`
+    fn into_rwlock(self) -> RwLock<Self> {
+        self.pipe(RwLock::new)
+    }
+
+    /// Convert `value` to `Arc::new(RwLock::new(value))`
+    fn into_arc_rwlock(self) -> Arc<RwLock<Self>> {
+        Arc::new.compose(RwLock::new)(self)
     }
 }
 
