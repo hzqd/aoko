@@ -2,11 +2,11 @@ use crate::no_std::pipelines::tap::Tap;
 use std::{prelude::v1::*, iter::Product, ops::{Add, DerefMut}};
 use rayon::{iter::Either, prelude::*};
 
-pub trait StdSort<T> {
+pub trait ParSort<T> {
     fn psort(self) -> Self;
 }
 
-impl<T, P> StdSort<T> for P where T: Ord + Send, P: DerefMut, P::Target: ParallelSliceMut<T> {
+impl<T, P> ParSort<T> for P where T: Ord + Send, P: DerefMut, P::Target: ParallelSliceMut<T> {
     /// Sorts `Vec` in parallel.
     ///
     /// # Examples
@@ -32,26 +32,48 @@ impl<T, P> StdSort<T> for P where T: Ord + Send, P: DerefMut, P::Target: Paralle
     }
 }
 
-/// This trait is to implement some extension functions for `Vec` type,
-/// which need two generic types and reference.
-pub trait StdVecExt2<'a, T, R> where T: 'a {
-    fn map(&'a self, f: impl Fn(&'a T) -> R + Sync + Send) -> Vec<R>;
-    fn filter_map(&'a self, f: impl Fn(&'a T) -> Option<R> + Sync + Send) -> Vec<R>;
+pub trait ParMutExt<T, R> {
+    fn on_each(self, f: impl Fn(&mut T) -> R + Sync + Send) -> Self;
+    fn map(&mut self, f: impl Fn(&mut T) -> R + Sync + Send) -> Vec<R> where R: Send;
+    fn filter_map(&mut self, f: impl Fn(&mut T) -> Option<R> + Sync + Send) -> Vec<R> where R: Send;
+    fn bind(&mut self, f: impl Fn(&mut T) -> R + Sync + Send) -> Vec<R> where R: IntoParallelIterator, Vec<R>: FromParallelIterator<<R as IntoParallelIterator>::Item>;
 }
 
-impl<'a, T, R> StdVecExt2<'a, T, R> for Vec<T> where T: 'a + Sync, R: Send {
-    /// Returns a `Vec` containing the results of applying the given `f` function 
-    /// to each element in the original `Vec`.
+impl<T, R, P> ParMutExt<T, R> for P where T: Send + Sync, P: DerefMut, P::Target: for<'a> IntoParallelRefMutIterator<'a, Item = &'a mut T> {
+    /// Performs the given `f` on each element in parallel, and returns the itself afterwards.
     ///
     /// # Examples
     ///
     /// ```
-    /// use aoko::standard::parallelisms::par_vec_ext::*;
-    ///
-    /// assert_eq!(vec![1, 2, 3].map(|i| i + 1), vec![2, 3, 4]);
+    /// use aoko::{assert_eqs, no_std::functions::fun::s, standard::{functions::ext::*, parallelisms::par_vec_ext::*}};
+    /// 
+    /// assert_eqs!{
+    ///     vec!["hello", "rust"].on_each(|s| *s.echo()),        vec!["hello", "rust"]; // * => inner return by auto copy
+    ///     vec![s("Jan"), s("Febr")].on_each(|s| *s += "uary"), vec!["January", "February"];
+    /// }
     /// ```
-    fn map(&'a self, f: impl Fn(&'a T) -> R + Sync + Send) -> Vec<R> {
-        self.par_iter().map(f).collect()
+    fn on_each(self, f: impl Fn(&mut T) -> R + Sync + Send) -> Self {
+        self.tap_mut(|v| v.par_iter_mut().for_each(|e| { f(e); }))
+    }
+
+    /// Returns a `Vec` containing the results of applying the given `f` function 
+    /// to each element in the original.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use aoko::{assert_eqs, standard::parallelisms::par_vec_ext::*};
+    ///
+    /// let mut v1 = vec![1, 2, 3];
+    /// let v2 = v1.map(|i| { *i += 1; *i + 1 });
+    /// 
+    /// assert_eqs! {
+    ///     v1, [2, 3, 4];
+    ///     v2, [3, 4, 5];
+    /// }
+    /// ```
+    fn map(&mut self, f: impl Fn(&mut T) -> R + Sync + Send) -> Vec<R> where R: Send {
+        self.par_iter_mut().map(f).collect()
     }
 
     /// A combined map and filter. Filtering is handled via `Option` instead of `Boolean`
@@ -60,22 +82,45 @@ impl<'a, T, R> StdVecExt2<'a, T, R> for Vec<T> where T: 'a + Sync, R: Send {
     /// # Examples
     ///
     /// ```
-    /// use aoko::standard::parallelisms::par_vec_ext::*;
+    /// use aoko::{assert_eqs, no_std::{pipelines::tap::Tap, functions::fun::s}, standard::parallelisms::par_vec_ext::*};
     ///
-    /// let v = vec!["apple", "1", "banana", "2"]
-    ///     .filter_map(|s| s.parse::<u8>().ok());
-    /// assert_eq!(v, vec![1, 2]);
+    /// let mut v1 = vec![s("Jan"), s("1"), s("Febr"), s("2")];
+    /// let v2 = v1.filter_map(|s| s.parse::<u8>().ok().tap_mut(|_| *s += "uary"));
+    /// 
+    /// assert_eqs! {
+    ///     v2, vec![1, 2];
+    ///     v1, vec!["January", "1uary", "February", "2uary"];
+    /// }
     /// ```
-    fn filter_map(&'a self, f: impl Fn(&'a T) -> Option<R> + Sync + Send) -> Vec<R> {
-        self.par_iter().filter_map(f).collect()
+    fn filter_map(&mut self, f: impl Fn(&mut T) -> Option<R> + Sync + Send) -> Vec<R> where R: Send {
+        self.par_iter_mut().filter_map(f).collect()
+    }
+
+    /// Returns a `Vec` containing the unwrapped results of applying
+    /// the given `f` function to each element in the original.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use aoko::{assert_eqs, standard::parallelisms::par_vec_ext::*};
+    ///
+    /// let mut v1 = vec![[1, 2], [3, 4], [5, 6], [7, 8]];
+    /// let v2 = v1.map(|i| { i[0] += 1; i[1] -= 1; i[0] + i[1] });
+    /// 
+    /// assert_eqs! {
+    ///     v1, [[2, 1], [4, 3], [6, 5], [8, 7]];
+    ///     v2, [3, 7, 11, 15];
+    /// }
+    /// ```
+    fn bind(&mut self, f: impl Fn(&mut T) -> R + Sync + Send) -> Vec<R> where R: IntoParallelIterator, Vec<R>: FromParallelIterator<<R as IntoParallelIterator>::Item> {
+        self.par_iter_mut().flat_map(f).collect()
     }
 }
 
 /// This trait is to implement some extension functions for `Vec` type,
 /// which need one generic type, and do not need reference.
-pub trait StdVecExt1<T> {
+pub trait ParExt<T> {
     fn for_each<R>(self, f: impl Fn(T) -> R + Sync + Send);
-    fn on_each<R>(self, f: impl Fn(&mut T) -> R + Sync + Send) -> Self;
     fn filter(self, f: impl Fn(&T) -> bool + Sync + Send) -> Vec<T>;
     fn fold(self, init: T, f: impl Fn(T, T) -> T + Sync + Send) -> T where T: Sync + Copy;
     fn reduce(self, f: impl Fn(T, T) -> T + Sync + Send) -> T where T: Sync + Copy + Default;
@@ -85,32 +130,18 @@ pub trait StdVecExt1<T> {
     fn partition3(self, predicate1: impl Fn(&T) -> bool + Sync + Send, predicate2: impl Fn(&T) -> bool + Sync + Send) -> (Vec<T>, Vec<T>, Vec<T>) where T: Sync;
 }
 
-impl<T> StdVecExt1<T> for Vec<T> where T: Send {
+impl<T, P> ParExt<T> for P where T: Send + Sync, P: IntoParallelIterator<Item = T> + for<'a> IntoParallelRefIterator<'a> {
     /// Executes `f` on each item produced by the iterator for `Vec` in parallel.
     ///
     /// # Examples
     ///
     /// ```
-    /// use aoko::standard::{functions::ext::*, parallelisms::par_vec_ext::*};
+    /// use aoko::{no_std::functions::fun::s, standard::{functions::ext::*, parallelisms::par_vec_ext::*}};
     ///
-    /// vec![String::from("abc"), String::from("xyz")]
-    ///     .for_each(|e| e.echo());
+    /// vec![s("abc"), s("xyz")].for_each(|s| s.echo());
     /// ```
     fn for_each<R>(self, f: impl Fn(T) -> R + Sync + Send) {
         self.into_par_iter().for_each(|e| { f(e); });
-    }
-
-    /// Performs the given `f` on each element in parallel, and returns the `Vec` itself afterwards.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use aoko::standard::{functions::ext::*, parallelisms::par_vec_ext::*};
-    ///
-    /// assert_eq!(vec!["hello", "rust"].on_each(|s| *s.echo()), vec!["hello", "rust"]);
-    /// ```
-    fn on_each<R>(self, f: impl Fn(&mut T) -> R + Sync + Send) -> Self {
-        self.tap_mut(|v| v.par_iter_mut().for_each(|e| { f(e); }))
     }
 
     /// Returns a `Vec` containing only elements matching the given `f` predicate in parallel.

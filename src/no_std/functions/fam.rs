@@ -264,7 +264,7 @@ impl<T> Applicative<T> for Vector {
     /// 
     /// let add_one = |x| x + 1;
     /// let mul_two = |y| y * 2;
-    /// assert_eq!(vec![4, 4], Vector::apply(vec![3, 2], Vec::from([add_one, mul_two])));
+    /// assert_eq!(vec![3, 4], Vector::apply(vec![2, 2], Vec::from([add_one, mul_two])));
     /// ```
     fn apply<U>(value: Self::Type<T>, f: Self::Type<impl FnMut(T) -> U>) -> Self::Type<U> {
         value.into_iter().zip(f.into_iter()).map(|(x, mut f)| f(x)).collect()

@@ -478,15 +478,12 @@ impl U128Ext for u128 {
 }
 
 /// This trait is to implement some extension functions for `Option<T>` type.
-pub trait OptionExt {
-    type Enter;
-    fn or_else_some(self, f: impl FnOnce() -> Self::Enter) -> Self;
-    fn apply<R>(self, f: Option<impl FnMut(Self::Enter) -> R>) -> Option<R>;
+pub trait OptionExt<T> {
+    fn or_else_some(self, f: impl FnOnce() -> T) -> Self;
+    fn apply<R>(self, f: Option<impl FnMut(T) -> R>) -> Option<R>;
 }
 
-impl<T> OptionExt for Option<T> {
-    type Enter = T;
-
+impl<T> OptionExt<T> for Option<T> {
     /// This function is similar to `or_else`,
     /// but convert closure result to `Some` automatically.
     /// 
@@ -497,7 +494,7 @@ impl<T> OptionExt for Option<T> {
     /// 
     /// assert_eq!(Some(0), None::<u8>.or_else_some(|| 0));
     /// ```
-    fn or_else_some(self, f: impl FnOnce() -> Self::Enter) -> Self {
+    fn or_else_some(self, f: impl FnOnce() -> T) -> Self {
         match self {
             Some(_) => self,
             None => f().into_some()
@@ -516,24 +513,18 @@ impl<T> OptionExt for Option<T> {
     ///     Some(s("abcd")), Some(s("ab")).apply(Some(|x| x + "cd"));
     /// }
     /// ```
-    fn apply<R>(self, f: Option<impl FnMut(Self::Enter) -> R>) -> Option<R> {
+    fn apply<R>(self, f: Option<impl FnMut(T) -> R>) -> Option<R> {
         Maybe::apply(self, f)
     }
 }
 
 /// This trait is to implement some extension functions for `Result<T, E>` type.
-pub trait ResultExt {
-    type Succ;
-    type Fail;
-
-    fn zip<T>(self, other: Result<T, Self::Fail>) -> Result<(Self::Succ, T), Self::Fail>;
-    fn apply<T>(self, f: Result<impl FnMut(Self::Succ) -> T, Self::Fail>) -> Result<T, Self::Fail>;
+pub trait ResultExt<T, E> {
+    fn zip<U>(self, other: Result<U, E>) -> Result<(T, U), E>;
+    fn apply<U>(self, f: Result<impl FnMut(T) -> U, E>) -> Result<U, E>;
 }
 
-impl<T, E> ResultExt for Result<T, E> {
-    type Succ = T;
-    type Fail = E;
-
+impl<T, E> ResultExt<T, E> for Result<T, E> {
     /// Zips `self` with another `Result`.
     ///
     /// If `self` is `Ok(s)` and `other` is `Ok(o)`, this method returns `Ok((s, o))`.
@@ -553,7 +544,7 @@ impl<T, E> ResultExt for Result<T, E> {
     ///     x.zip(z), Err(());
     /// }
     /// ```
-    fn zip<U>(self, other: Result<U, Self::Fail>) -> Result<(Self::Succ, U), Self::Fail> {
+    fn zip<U>(self, other: Result<U, E>) -> Result<(T, U), E> {
         match (self, other) {
             (Ok(a), Ok(b)) => (a, b).into_ok(),
             (Err(e), _) | (_, Err(e)) => e.into_err(),
@@ -575,20 +566,16 @@ impl<T, E> ResultExt for Result<T, E> {
     ///     Err(()),        Ok(s("ab")).apply(f);
     /// }
     /// ```
-    fn apply<U>(self, f: Result<impl FnMut(Self::Succ) -> U, Self::Fail>) -> Result<U, Self::Fail> {
+    fn apply<U>(self, f: Result<impl FnMut(T) -> U, E>) -> Result<U, E> {
         Either::apply(self, f)
     }
 }
 
-pub trait VecExt {
-    type Item;
-
-    fn apply<U>(self, f: Vec<impl FnMut(Self::Item) -> U>) -> Vec<U>;
+pub trait VecExt<T> {
+    fn apply<U>(self, f: Vec<impl FnMut(T) -> U>) -> Vec<U>;
 }
 
-impl<T> VecExt for Vec<T> {
-    type Item = T;
-
+impl<T> VecExt<T> for Vec<T> {
     /// Applies the function to the element.
     /// 
     /// # Examples
@@ -601,18 +588,18 @@ impl<T> VecExt for Vec<T> {
     /// 
     /// assert_eq!(v.apply(f), vec![3, 8, 2]);
     /// ```
-    fn apply<U>(self, f: Vec<impl FnMut(Self::Item) -> U>) -> Vec<U> {
+    fn apply<U>(self, f: Vec<impl FnMut(T) -> U>) -> Vec<U> {
         Vector::apply(self, f)
     }
 }
 
 /// This trait is to implement some extension functions with currying two parameters.
-pub trait Curry2<'a, P1, P2, R> {
-    fn partial2(self, p1: P1) -> Box<dyn FnOnce(P2) -> R + 'a>;
-    fn partial2_rev(self, p2: P2) -> Box<dyn FnOnce(P1) -> R + 'a>;
+pub trait Curry<'a, P1, P2, R> {
+    fn curryl(self) -> impl FnOnce(P1) -> Box<dyn FnOnce(P2) -> R + 'a>;
+    fn curryr(self) -> impl FnOnce(P2) -> Box<dyn FnOnce(P1) -> R + 'a>;
 }
 
-impl<'a, P1: 'a, P2: 'a, R, F> Curry2<'a, P1, P2, R> for F where F: FnOnce(P1, P2) -> R + 'a {
+impl<'a, P1: 'a, P2: 'a, R, F> Curry<'a, P1, P2, R> for F where F: FnOnce(P1, P2) -> R + 'a {
     /// Two parameters, currying from left to right.
     ///
     /// # Examples
@@ -620,11 +607,12 @@ impl<'a, P1: 'a, P2: 'a, R, F> Curry2<'a, P1, P2, R> for F where F: FnOnce(P1, P
     /// ```
     /// use aoko::no_std::functions::ext::*;
     ///
-    /// fn foo(a: u8, b: u8) -> u8 { a - b }
-    /// assert_eq!(foo.partial2(3)(2), 1);
+    /// fn sub(a: u8, b: u8) -> u8 { a - b }
+    /// let c1 = sub.curryl();
+    /// assert_eq!(c1(3)(2), 1);
     /// ```
-    fn partial2(self, p1: P1) -> Box<dyn FnOnce(P2) -> R + 'a> {
-        (|p2| self(p1, p2)).into_box()
+    fn curryl(self) -> impl FnOnce(P1) -> Box<dyn FnOnce(P2) -> R + 'a> {
+        |p1| (|p2| self(p1, p2)).into_box()
     }
 
     /// Two parameters, currying from right to left.
@@ -634,21 +622,22 @@ impl<'a, P1: 'a, P2: 'a, R, F> Curry2<'a, P1, P2, R> for F where F: FnOnce(P1, P
     /// ```
     /// use aoko::no_std::functions::ext::*;
     ///
-    /// fn foo(a: u8, b: u8) -> u8 { a - b }
-    /// assert_eq!(foo.partial2_rev(2)(3), 1);
+    /// fn sub(a: u8, b: u8) -> u8 { a - b }
+    /// let cu = sub.curryr(); 
+    /// assert_eq!(cu(2)(3), 1);
     /// ```
-    fn partial2_rev(self, p2: P2) -> Box<dyn FnOnce(P1) -> R + 'a> {
-        (|p1| self(p1, p2)).into_box()
+    fn curryr(self) -> impl FnOnce(P2) -> Box<dyn FnOnce(P1) -> R + 'a> {
+        |p2| (|p1| self(p1, p2)).into_box()
     }
 }
 
 /// This trait is to implement some extension functions whose type is `FnOnce`.
-pub trait FnOnceExt<'a, T, U, R> {
-    fn combine(self, g: impl FnOnce(U) -> R + 'a) -> Box<dyn FnOnce(T) -> R + 'a>;
-    fn compose(self, g: impl FnOnce(R) -> T + 'a) -> Box<dyn FnOnce(R) -> U + 'a>;
+pub trait FnOnceExt<T, U, R> {
+    fn combine(self, g: impl FnOnce(U) -> R) -> impl FnOnce(T) -> R;
+    fn compose(self, g: impl FnOnce(R) -> T) -> impl FnOnce(R) -> U;
 }
 
-impl<'a, T, U, R, F> FnOnceExt<'a, T, U, R> for F where F: FnOnce(T) -> U + 'a {
+impl<T, U, R, F> FnOnceExt<T, U, R> for F where F: FnOnce(T) -> U {
     /// Combining two functions.
     ///
     /// # Examples
@@ -663,8 +652,8 @@ impl<'a, T, U, R, F> FnOnceExt<'a, T, U, R> for F where F: FnOnce(T) -> U + 'a {
     /// let func = inc.combine(sum).combine(to_string);
     /// assert_eq!(s("45"), func(&[0, 1, 2, 3, 4, 5, 6, 7, 8]));
     /// ```
-    fn combine(self, g: impl FnOnce(U) -> R + 'a) -> Box<dyn FnOnce(T) -> R + 'a> {
-        (|x: T| x.pipe(self).pipe(g)).into_box()    // |x| g(self(x))
+    fn combine(self, g: impl FnOnce(U) -> R) -> impl FnOnce(T) -> R {
+        |x| x.pipe(self).pipe(g)  // |x| g(self(x))
     }
 
     /// Combining two functions in reverse order.
@@ -681,7 +670,7 @@ impl<'a, T, U, R, F> FnOnceExt<'a, T, U, R> for F where F: FnOnce(T) -> U + 'a {
     /// let func = to_string.compose(sum).compose(inc);
     /// assert_eq!(s("45"), func(&[0, 1, 2, 3, 4, 5, 6, 7, 8]));
     /// ```
-    fn compose(self, g: impl FnOnce(R) -> T + 'a) -> Box<dyn FnOnce(R) -> U + 'a> {
-        g.combine(self)                             // |x| self(g(x))
+    fn compose(self, g: impl FnOnce(R) -> T) -> impl FnOnce(R) -> U {
+        g.combine(self)  // |x| self(g(x))
     }
 }
