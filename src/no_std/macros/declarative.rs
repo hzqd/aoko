@@ -1,4 +1,4 @@
-/// Abbr. of `let`
+/// Alias for `let`
 /// 
 /// # Examples
 /// 
@@ -15,7 +15,7 @@ macro_rules! val {
     };
 }
 
-/// Abbr. of `let mut`
+/// Alias for `let mut`
 /// 
 /// # Examples
 /// 

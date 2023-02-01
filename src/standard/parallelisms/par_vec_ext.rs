@@ -39,7 +39,7 @@ pub trait ParMutExt<T, R> {
     fn bind(&mut self, f: impl Fn(&mut T) -> R + Sync + Send) -> Vec<R> where R: IntoParallelIterator, Vec<R>: FromParallelIterator<<R as IntoParallelIterator>::Item>;
 }
 
-impl<T, R, P> ParMutExt<T, R> for P where T: Send + Sync, P: DerefMut, P::Target: for<'a> IntoParallelRefMutIterator<'a, Item = &'a mut T> {
+impl<T, R, P> ParMutExt<T, R> for P where P: DerefMut, P::Target: for<'a> IntoParallelRefMutIterator<'a, Item = &'a mut T> {
     /// Performs the given `f` on each element in parallel, and returns the itself afterwards.
     ///
     /// # Examples
@@ -121,16 +121,16 @@ impl<T, R, P> ParMutExt<T, R> for P where T: Send + Sync, P: DerefMut, P::Target
 /// which need one generic type, and do not need reference.
 pub trait ParExt<T> {
     fn for_each<R>(self, f: impl Fn(T) -> R + Sync + Send);
-    fn filter(self, f: impl Fn(&T) -> bool + Sync + Send) -> Vec<T>;
+    fn filter(self, f: impl Fn(&T) -> bool + Sync + Send) -> Vec<T> where T: Send;
     fn fold(self, init: T, f: impl Fn(T, T) -> T + Sync + Send) -> T where T: Sync + Copy;
     fn reduce(self, f: impl Fn(T, T) -> T + Sync + Send) -> T where T: Sync + Copy + Default;
     fn sum(self) -> T where T: Sync + Copy + Default + Add<Output = T>;
-    fn product(self) -> T where T: Product;
-    fn partition(self, f: impl Fn(&T) -> bool + Sync + Send) -> (Vec<T>, Vec<T>);
-    fn partition3(self, predicate1: impl Fn(&T) -> bool + Sync + Send, predicate2: impl Fn(&T) -> bool + Sync + Send) -> (Vec<T>, Vec<T>, Vec<T>) where T: Sync;
+    fn product(self) -> T where T: Send + Product;
+    fn partition(self, f: impl Fn(&T) -> bool + Sync + Send) -> (Vec<T>, Vec<T>) where T: Send;
+    fn partition3(self, predicate1: impl Fn(&T) -> bool + Sync + Send, predicate2: impl Fn(&T) -> bool + Sync + Send) -> (Vec<T>, Vec<T>, Vec<T>) where T: Send;
 }
 
-impl<T, P> ParExt<T> for P where T: Send + Sync, P: IntoParallelIterator<Item = T> + for<'a> IntoParallelRefIterator<'a> {
+impl<T, P> ParExt<T> for P where P: IntoParallelIterator<Item = T> + for<'a> IntoParallelRefIterator<'a> {
     /// Executes `f` on each item produced by the iterator for `Vec` in parallel.
     ///
     /// # Examples
@@ -153,7 +153,7 @@ impl<T, P> ParExt<T> for P where T: Send + Sync, P: IntoParallelIterator<Item = 
     ///
     /// assert_eq!(vec![1, 2, 3, 4].filter(|i| i % 2 == 0), vec![2, 4]);
     /// ```
-    fn filter(self, f: impl Fn(&T) -> bool + Sync + Send) -> Vec<T> {
+    fn filter(self, f: impl Fn(&T) -> bool + Sync + Send) -> Vec<T> where T: Send {
         self.into_par_iter().filter(f).collect()
     }
 
@@ -213,7 +213,7 @@ impl<T, P> ParExt<T> for P where T: Send + Sync, P: IntoParallelIterator<Item = 
     ///
     /// assert_eq!(vec![1, 2, 3, 4].product(), 24);
     /// ```
-    fn product(self) -> T where T: Product {
+    fn product(self) -> T where T: Send + Product {
         self.into_par_iter().product()
     }
 
@@ -228,7 +228,7 @@ impl<T, P> ParExt<T> for P where T: Send + Sync, P: IntoParallelIterator<Item = 
     ///
     /// assert_eq!(vec![1, 2, 3, 4].partition(|i| i % 2 != 0), (vec![1, 3], vec![2, 4]));
     /// ```
-    fn partition(self, f: impl Fn(&T) -> bool + Sync + Send) -> (Vec<T>, Vec<T>) {
+    fn partition(self, f: impl Fn(&T) -> bool + Sync + Send) -> (Vec<T>, Vec<T>) where T: Send {
         self.into_par_iter().partition(f)
     }
 
@@ -244,7 +244,7 @@ impl<T, P> ParExt<T> for P where T: Send + Sync, P: IntoParallelIterator<Item = 
     ///
     /// assert_eq!(vec![1, 2, 3].partition3(|i| i < &2, |i| i == &2), (vec![1], vec![2], vec![3]));
     /// ```
-    fn partition3(self, predicate1: impl Fn(&T) -> bool + Sync + Send, predicate2: impl Fn(&T) -> bool + Sync + Send) -> (Vec<T>, Vec<T>, Vec<T>) where T: Sync {
+    fn partition3(self, predicate1: impl Fn(&T) -> bool + Sync + Send, predicate2: impl Fn(&T) -> bool + Sync + Send) -> (Vec<T>, Vec<T>, Vec<T>) where T: Send {
         let ((first, second), third) = self.into_par_iter().partition_map(|e|
             if predicate1(&e) { Either::Left(Either::Left(e)) }
             else if predicate2(&e) { Either::Left(Either::Right(e)) }
