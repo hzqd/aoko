@@ -64,10 +64,36 @@ impl_integer_monoid! {
     u128, U128Add, 0;   i128, I128Add, 0;       u128, U128Mul, 1;   i128, I128Mul, 1;
 }
 
+macro_rules! impl_float_monoid {
+    ($($ty:ty, $id:ident, $ex:expr);* $(;)?) => {$(
+        pub struct $id;
+
+        impl Monoid for $id {
+            type Unit = $ty;
+            type Ret = Self::Unit;
+
+            fn unit() -> Self::Unit { $ex }
+
+            fn merge(some: Self::Unit, other: Self::Unit) -> Self::Ret {
+                match Self::unit() {
+                    x if x == 0.0 => some + other,
+                    y if y == 1.0 => some * other,
+                    _ => panic!("Unsupport Unit")
+                }
+            }
+        }
+    )*};
+}
+
+impl_float_monoid! {
+    f32, F32Add, 0.0;   f32, F32Mul, 1.0;
+    f64, F64Add, 0.0;   f64, F64Mul, 1.0;
+}
+
 #[cfg(test)]
 mod test {
     use crate::assert_eqs;
-    use super::{Monoid, StrDot, U8Add, U8Mul};
+    use super::*;
 
     #[test]
     fn test_all() {
@@ -75,6 +101,8 @@ mod test {
             "a.b", StrDot::merge("a", "b");
             5, U8Add::merge(2, 3);
             6, U8Mul::merge(2, 3);
+            4.6,  F64Add::merge(1.2, 3.4);
+            4.08, F64Mul::merge(1.2, 3.4);
         }
     }
 }
