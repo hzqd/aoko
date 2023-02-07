@@ -136,11 +136,42 @@ pub trait AnyExt: Sized {
     /// ```
     /// use aoko::no_std::functions::ext::*;
     ///
-    /// assert_eq!("".type_name().0, "&str");
-    /// assert_eq!("s".type_name().1, "s");
-    /// assert_eq!((&"").type_name().0, "&&str");
+    /// assert_eq!("".type_name(), "&str");
+    /// assert_eq!((&"").type_name(), "&&str");
     /// ```
-    fn type_name(self) -> (&'static str, Self) {
+    fn type_name(self) -> &'static str {
+        core::any::type_name::<Self>()
+    }
+
+    /// Consumes `self`,
+    /// returns the size of its type in number and the receiver `self`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use aoko::no_std::functions::ext::*;
+    ///
+    /// assert_eq!(().type_size(), 0);
+    /// assert_eq!((&()).type_size(), 8);
+    /// assert_eq!([(), ()].type_size(), 0);
+    /// ```
+    fn type_size(self) -> usize {
+        core::mem::size_of::<Self>()
+    }
+
+    /// Consumes `self`,
+    /// returns the name of its type as a string slice and the receiver `self`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use aoko::no_std::functions::ext::*;
+    ///
+    /// assert_eq!("".type_name_with_value().0, "&str");
+    /// assert_eq!("s".type_name_with_value().1, "s");
+    /// assert_eq!((&"").type_name_with_value().0, "&&str");
+    /// ```
+    fn type_name_with_value(self) -> (&'static str, Self) {
         (core::any::type_name::<Self>(), self)
     }
     
@@ -152,12 +183,12 @@ pub trait AnyExt: Sized {
     /// ```
     /// use aoko::no_std::functions::ext::*;
     ///
-    /// assert_eq!(().type_size().0, 0);
-    /// assert_eq!(().type_size().1, ());
-    /// assert_eq!((&()).type_size().0, 8);
-    /// assert_eq!([(), ()].type_size().0, 0);
+    /// assert_eq!(().type_size_with_value().0, 0);
+    /// assert_eq!(().type_size_with_value().1, ());
+    /// assert_eq!((&()).type_size_with_value().0, 8);
+    /// assert_eq!([(), ()].type_size_with_value().0, 0);
     /// ```
-    fn type_size(self) -> (usize, Self) {
+    fn type_size_with_value(self) -> (usize, Self) {
         (core::mem::size_of::<Self>(), self)
     }
 
