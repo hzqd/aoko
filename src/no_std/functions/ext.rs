@@ -1,6 +1,6 @@
 use crate::no_std::pipelines::{pipe::Pipe, tap::Tap};
 use core::{cell::{Cell, RefCell}, ops::{BitXorAssign, Not}, str::Utf8Error};
-use alloc::{boxed::Box, format, rc::Rc, str, string::String, sync::Arc, vec::Vec};
+use alloc::{boxed::Box, format, rc::Rc, str, string::String, sync::Arc, vec::Vec, borrow::Cow};
 use itertools::Itertools;
 use super::fam::{Applicative, Maybe, Either, Vector};
 
@@ -422,11 +422,12 @@ impl StrExt for &str {
 }
 
 /// This trait is to implement some extension functions for `&[u8]` and `Vec<u8>` type.
-pub trait Utf8Ext<'a> {
-    fn to_str(self) -> Result<&'a str, Utf8Error>;
+pub trait Utf8Ext {
+    fn to_str(&self) -> Result<&str, Utf8Error>;
+    fn to_str_lossy(&self) -> Cow<'_, str>;
 }
 
-impl<'a> Utf8Ext<'a> for &'a [u8] {
+impl Utf8Ext for [u8] {
     /// Converts a slice of bytes to a string slice.
     /// 
     /// # Examples
@@ -436,8 +437,25 @@ impl<'a> Utf8Ext<'a> for &'a [u8] {
     /// 
     /// assert_eq!("💖", [240, 159, 146, 150].to_str().unwrap());
     /// ```
-    fn to_str(self) -> Result<&'a str, Utf8Error> {
+    fn to_str(&self) -> Result<&str, Utf8Error> {
         str::from_utf8(self)
+    }
+
+    /// Converts a slice of bytes to a string, including invalid characters.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use aoko::{assert_eqs, no_std::functions::ext::*};
+    /// 
+    /// assert_eqs! {
+    ///     "💖", [240, 159, 146, 150].to_str_lossy();
+    ///     "Hello �World", b"Hello \xF0\x90\x80World".to_str_lossy();
+    /// }
+    /// 
+    /// ```
+    fn to_str_lossy(&self) -> Cow<str> {
+        String::from_utf8_lossy(self)
     }
 }
 
