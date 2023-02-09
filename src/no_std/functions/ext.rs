@@ -48,11 +48,11 @@ pub trait AnyExt1<R>: Sized {
     /// ```
     /// use aoko::no_std::functions::ext::*;
     ///
-    /// assert_eq!("Hello World".to_string().into_some(), "Hello".then_if(|s| s.starts_with("Hel"), |s| format!("{} World", s)));
-    /// assert_eq!(None, "Hello".then_if(|s| s.starts_with("Wor"), |_| ()));
+    /// assert_eq!("Hello World".to_string().into_some(), "Hello".if_then(|s| s.starts_with("Hel"), |s| format!("{} World", s)));
+    /// assert_eq!(None, "Hello".if_then(|s| s.starts_with("Wor"), |_| ()));
     /// ```
-    fn then_if(self, f1: impl FnOnce(&Self) -> bool, f2: impl FnOnce(Self) -> R) -> Option<R> {
-        if f1(&self) { f2(self).into_some() } else { None }
+    fn if_then(self, r#if: impl FnOnce(&Self) -> bool, then: impl FnOnce(Self) -> R) -> Option<R> {
+        if r#if(&self) { then(self).into_some() } else { None }
     }
 
     /// Returns `Some(f())` if it doesn't satisfy the given predicate function,
@@ -63,11 +63,11 @@ pub trait AnyExt1<R>: Sized {
     /// ```
     /// use aoko::no_std::functions::ext::*;
     ///
-    /// assert_eq!(None, "Hello".then_unless(|s| s.starts_with("Hel"), |_| ()));
-    /// assert_eq!("Hello World".to_string().into_some(), "Hello".then_unless(|s| s.starts_with("Wor"), |s| format!("{} World", s)));
+    /// assert_eq!(None, "Hello".unless_then(|s| s.starts_with("Hel"), |_| ()));
+    /// assert_eq!("Hello World".to_string().into_some(), "Hello".unless_then(|s| s.starts_with("Wor"), |s| format!("{} World", s)));
     /// ```
-    fn then_unless(self, f1: impl FnOnce(&Self) -> bool, f2: impl FnOnce(Self) -> R) -> Option<R> {
-        if f1(&self).not() { f2(self).into_some() } else { None }
+    fn unless_then(self, if_not: impl FnOnce(&Self) -> bool, then: impl FnOnce(Self) -> R) -> Option<R> {
+        self.if_then(|x| Not::not.compose(if_not)(x), then)
     }
 }
 
@@ -200,11 +200,11 @@ pub trait AnyExt: Sized {
     /// ```
     /// use aoko::no_std::functions::ext::*;
     ///
-    /// assert_eq!(Some("Hello"), "Hello".take_if(|s| s.starts_with("Hel")));
-    /// assert_eq!(None, "Hello".take_if(|s| s.starts_with("Wor")));
+    /// assert_eq!(Some("Hello"), "Hello".if_take(|s| s.starts_with("Hel")));
+    /// assert_eq!(None, "Hello".if_take(|s| s.starts_with("Wor")));
     /// ```
-    fn take_if(self, f: impl FnOnce(&Self) -> bool) -> Option<Self> {
-        if f(&self) { self.into_some() } else { None }
+    fn if_take(self, f: impl FnOnce(&Self) -> bool) -> Option<Self> {
+        self.unless_then(|x| Not::not.compose(f)(x), |s| s)
     }
 
     /// Returns `Some(self)` if it doesn't satisfy the given predicate function,
@@ -215,11 +215,11 @@ pub trait AnyExt: Sized {
     /// ```
     /// use aoko::no_std::functions::ext::*;
     ///
-    /// assert_eq!(None, "Hello".take_unless(|s| s.starts_with("Hel")));
-    /// assert_eq!(Some("Hello"), "Hello".take_unless(|s| s.starts_with("Wor")));
+    /// assert_eq!(None, "Hello".unless_take(|s| s.starts_with("Hel")));
+    /// assert_eq!(Some("Hello"), "Hello".unless_take(|s| s.starts_with("Wor")));
     /// ```
-    fn take_unless(self, f: impl FnOnce(&Self) -> bool) -> Option<Self> {
-        if f(&self).not() { self.into_some() } else { None }
+    fn unless_take(self, f: impl FnOnce(&Self) -> bool) -> Option<Self> {
+        self.if_take(|x| Not::not.compose(f)(x))
     }
 }
 
@@ -245,7 +245,7 @@ impl<R> BoolExt<R> for bool {
     /// assert_eq!(None, s.starts_with("Wor").if_true(&s[3..8]));
     /// ```
     fn if_true(self, value: R) -> Option<R> {
-        if self { value.into_some() } else { None }
+        self.unless_then(|s| s.not(), |_| value)
     }
 
     /// Chainable `if`, returns `Some(value)` when the condition is `false`
@@ -260,7 +260,7 @@ impl<R> BoolExt<R> for bool {
     /// assert_eq!(Some("lo Wo"), s.starts_with("Wor").if_false(&s[3..8]));
     /// ```
     fn if_false(self, value: R) -> Option<R> {
-        if self.not() { value.into_some() } else { None }
+        self.unless_then(|s| *s, |_| value)
     }
 
     /// Returns `Some(f())` if the receiver is `false`, or `None` otherwise
@@ -281,7 +281,7 @@ impl<R> BoolExt<R> for bool {
     /// assert_eq!(Some("lo Wo"), s.starts_with("Wor").then_false(|| &s[3..8]));
     /// ```
     fn then_false(self, f: impl FnOnce() -> R) -> Option<R> {
-        if self.not() { f().into_some() } else { None }
+        self.unless_then(|s| *s, |_| f())
     }
 }
 
