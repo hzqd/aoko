@@ -455,7 +455,7 @@ impl StrExt for &str {
 /// This trait is to implement some extension functions for `&[u8]` and `Vec<u8>` type.
 pub trait Utf8Ext {
     fn to_str(&self) -> Result<&str, Utf8Error>;
-    fn to_str_lossy(&self) -> Cow<'_, str>;
+    fn to_str_lossy(&self) -> Cow<str>;
 }
 
 impl Utf8Ext for [u8] {
