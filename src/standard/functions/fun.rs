@@ -33,18 +33,18 @@ pub fn measure_time_with_value<R>(f: impl FnOnce() -> R) -> (Duration, R) {
 
 /// Takes `TimeUnit` as a parameter,
 /// returns conversion function.
-pub fn time_conversion(u: &TimeUnit) -> impl FnOnce(Duration) -> u128 {
+pub fn time_conversion(u: &TimeUnit) -> impl FnOnce(Duration) -> f32 {
     use TimeUnit::*;
     match u {
-        Nanos => |elapsed: Duration| elapsed.as_nanos(),
-        Micros => |elapsed: Duration| elapsed.as_micros(),
-        Millis => |elapsed: Duration| elapsed.as_millis(),
-        Secs => |elapsed: Duration| elapsed.as_secs() as u128,
+        Nanos => |elapsed: Duration| elapsed.as_nanos() as f32,
+        Micros => |elapsed: Duration| elapsed.as_micros() as f32,
+        Millis => |elapsed: Duration| elapsed.as_millis() as f32,
+        Secs => |elapsed: Duration| elapsed.as_secs_f32(),
     }
 }
 
 /// Takes `TimeUnit` as a parameter,
 /// returns conversion function and the unit.
-pub fn time_conversion_with_unit(u: TimeUnit) -> (impl FnOnce(Duration) -> u128, TimeUnit) {
+pub fn time_conversion_with_unit(u: TimeUnit) -> (impl FnOnce(Duration) -> f32, TimeUnit) {
     time_conversion(&u).pipe(|f| (f, u))
 }
