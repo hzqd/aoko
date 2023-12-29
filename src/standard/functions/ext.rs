@@ -6,13 +6,13 @@ use minstant::Instant;
 /// which need a generic return type, for any sized type.
 pub trait StdAnyExt1<R>: Sized {
     /// Executes the given closure block and returns the duration of elapsed time interval.
-    fn measure_time(self, f: impl FnOnce(Self) -> R) -> Duration {
+    fn ext_measure_time(self, f: impl FnOnce(Self) -> R) -> Duration {
         Instant::now().tap(|_| f(self)).elapsed()
     }
 
     /// Executes the given closure block,
     /// returns the duration of elapsed time interval and the result of the closure execution.
-    fn measure_time_with_value(self, f: impl FnOnce(Self) -> R) -> (Duration, R) {
+    fn ext_measure_time_with_value(self, f: impl FnOnce(Self) -> R) -> (Duration, R) {
         Instant::now()
             .pipe(|t| (f(self), t.elapsed()))
             .pipe(|(v, e)| (e, v))
@@ -20,13 +20,13 @@ pub trait StdAnyExt1<R>: Sized {
 
     /// Executes the given closure block,
     /// returns the duration of elapsed time interval and the receiver `self`.
-    fn measure_time_with_self(self, f: impl FnOnce(&Self) -> R) -> (Duration, Self) {
+    fn ext_measure_time_with_self(self, f: impl FnOnce(&Self) -> R) -> (Duration, Self) {
         Instant::now().tap(|_| f(&self)).pipe(|t| (t.elapsed(), self))
     }
 
     /// Executes the given closure block,
     /// returns the duration of elapsed time interval and the receiver `self`.
-    fn measure_time_with_mut_self(mut self, f: impl FnOnce(&mut Self) -> R) -> (Duration, Self) {
+    fn ext_measure_time_with_mut_self(mut self, f: impl FnOnce(&mut Self) -> R) -> (Duration, Self) {
         Instant::now().tap(|_| f(&mut self)).pipe(|t| (t.elapsed(), self))
     }
 }
