@@ -390,3 +390,39 @@ macro_rules! structs_from_decl {
 
     () => {}
 }
+
+/// Add to_vec() for enum with interger.
+/// 
+/// # Examples
+/// 
+/// ``` rust
+/// use aoko::enum_to_vec;
+/// enum_to_vec!(
+/// pub enum MyEnum {
+///    A = 1,
+///    B = 2,
+/// }, u8);
+/// 
+/// let value = MyEnum::to_vec();
+/// assert_eq!(value, vec![1 as u8, 2]);
+#[macro_export]
+macro_rules! enum_to_vec {
+    (
+        $(#[$meta:meta])*
+        $vis:vis enum $enum_name:ident {
+            $($variant:ident = $value:expr),* $(,)?
+        },
+        $value_type:ty
+    ) => {
+        $(#[$meta])*
+        $vis enum $enum_name {
+            $($variant = $value),*
+        }
+
+        impl $enum_name {
+            pub fn to_vec() -> Vec<$value_type> {
+                vec![$($value as $value_type),*]
+            }
+        }
+    };
+}
